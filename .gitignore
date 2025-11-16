@@ -1,0 +1,16 @@
+# Dependency Management
+*.pyc
+*.o
+*.so
+*~
+
+# Python Virtual Environment
+.venv/
+__pycache__/
+
+# Distribution
+dist/
+
+# Logs and Data
+*.log
+/data/*

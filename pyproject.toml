@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "llm-dq-package"
+version = "0.1.0"
+description = "packaged version of the work done"
+authors = ["HTEC-CGiray-Oner <cihan.giray.oner@htec.group.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
