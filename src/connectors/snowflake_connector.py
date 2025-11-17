@@ -60,7 +60,7 @@ class SnowflakeConnector(BaseConnector):
         Load data from Snowflake table or custom query.
 
         Args:
-            dataset_id: Table name (e.g., 'CUSTOMERS', 'SCHEMA.TABLE')
+            dataset_id: Full table name ('DB.SCHEMA.TABLE') or just table name
             query: Optional custom SQL query (overrides dataset_id)
             limit: Optional row limit
 

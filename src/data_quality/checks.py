@@ -58,8 +58,10 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
     It automatically handles byte array columns by converting them to strings before checking.
 
     Args:
-        dataset_id (str): The unique identifier (name or ID) of the dataset to be analyzed (e.g., 'customer_data', 'october_sales', 'SCHEMA.TABLE').
-        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres', 'csv'). If not specified, uses default from settings.
+        dataset_id (str): Full table identifier. Examples:
+                         - 'SCHEMA.TABLE' or 'DATABASE.SCHEMA.TABLE'
+        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres', 'csv').
+                                       If not specified, uses default from settings.
 
     Returns:
         Dict[str, Any]: A dictionary containing the status and the total quantity of duplicate rows found.
