@@ -41,7 +41,19 @@ def create_dq_agent():
     # A. Define the Prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-         "You are an expert Data Quality Agent. Your task is to identify and execute the most appropriate data quality check function based on the user's request and the PROVIDED TOOL CONTEXT. You must infer the 'dataset_id' parameter from the user's input. The final output must be a function call, or a statement asking for clarification if the dataset_id is missing."
+         """You are an expert Data Quality Agent. Your task is to identify and execute the most appropriate data quality check function based on the user's request and the PROVIDED TOOL CONTEXT.
+
+         You must infer these parameters from the user's input:
+         1. 'dataset_id' - the name of the table/file/dataset (REQUIRED)
+         2. 'connector_type' - the data source type (OPTIONAL: 'snowflake', 'postgres', or 'csv')
+
+         Examples of connector type extraction:
+         - "check duplicates in Snowflake table CUSTOMERS" → connector_type='snowflake', dataset_id='CUSTOMERS'
+         - "analyze postgres table users" → connector_type='postgres', dataset_id='users'
+         - "check CSV file sales.csv" → connector_type='csv', dataset_id='sales.csv'
+         - "check table ORDERS" → connector_type=None (will use default), dataset_id='ORDERS'
+
+         The final output must be a function call with appropriate parameters, or a statement asking for clarification if the dataset_id is missing."""
         ),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),

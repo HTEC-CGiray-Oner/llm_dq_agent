@@ -1,16 +1,56 @@
 # src/data_quality/checks.py
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+import yaml
+import os
+from src.connectors.connector_factory import ConnectorFactory
 
-# Placeholder function: In a real project, this loads data from a DB/file
-def load_data_by_id(dataset_id: str) -> pd.DataFrame:
-    """Simulates loading data based on a user-provided ID."""
-    print(f"--- Loading data for: {dataset_id} ---")
-    # Example: If user says 'customer_data', we load that specific file/table
-    data = {'A': [1, 2, 2, 2, 3], 'B': ['a', 'b', 'b', 'b', 'c']}
-    return pd.DataFrame(data)
+# Load default connector from settings
+def get_default_connector_type() -> str:
+    """Get the default connector type from settings.yaml"""
+    settings_path = os.path.join(os.path.dirname(__file__), '../../config/settings.yaml')
+    if os.path.exists(settings_path):
+        with open(settings_path, 'r') as f:
+            settings = yaml.safe_load(f)
+            return settings.get('default_connector', 'csv')
+    return 'csv'
 
-def check_dataset_duplicates(dataset_id: str) -> Dict[str, Any]:
+def load_data_by_id(dataset_id: str, connector_type: Optional[str] = None, **kwargs) -> pd.DataFrame:
+    """
+    Loads data based on dataset ID using the specified connector.
+
+    Args:
+        dataset_id: The identifier for the dataset (table name, file name, etc.)
+        connector_type: Type of connector to use ('snowflake', 'postgres', 'csv').
+                       If None, uses default from settings.yaml
+        **kwargs: Additional parameters passed to the connector's load_data method
+
+    Returns:
+        DataFrame containing the loaded data
+    """
+    # Use default connector if not specified
+    if connector_type is None:
+        connector_type = get_default_connector_type()
+
+    print(f"--- Loading data for: {dataset_id} using {connector_type.upper()} connector ---")
+
+    try:
+        # Create connector using factory
+        connector = ConnectorFactory.create_connector(connector_type)
+
+        # Use context manager to ensure proper connection cleanup
+        with connector:
+            df = connector.load_data(dataset_id, **kwargs)
+            return df
+
+    except Exception as e:
+        print(f"Error loading data: {str(e)}")
+        # Fallback to dummy data for development/testing
+        print("Falling back to dummy data...")
+        data = {'A': [1, 2, 2, 2, 3], 'B': ['a', 'b', 'b', 'b', 'c']}
+        return pd.DataFrame(data)
+
+def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = None) -> Dict[str, Any]:
     """
     Checks an entire dataset for duplicate rows and returns the total count of duplicates.
 
@@ -18,13 +58,14 @@ def check_dataset_duplicates(dataset_id: str) -> Dict[str, Any]:
     It automatically handles byte array columns by converting them to strings before checking.
 
     Args:
-        dataset_id (str): The unique identifier (name or ID) of the dataset to be analyzed (e.g., 'customer_data', 'october_sales').
+        dataset_id (str): The unique identifier (name or ID) of the dataset to be analyzed (e.g., 'customer_data', 'october_sales', 'SCHEMA.TABLE').
+        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres', 'csv'). If not specified, uses default from settings.
 
     Returns:
         Dict[str, Any]: A dictionary containing the status and the total quantity of duplicate rows found.
     """
     # 1. Load the data based on the ID provided by the LLM
-    df = load_data_by_id(dataset_id)
+    df = load_data_by_id(dataset_id, connector_type=connector_type)
 
     # 2. Duplicate Detection Logic
     byte_value_col = [

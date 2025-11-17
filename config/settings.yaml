@@ -1,0 +1,39 @@
+# Data Quality Agent Configuration
+
+# Default connector to use (snowflake, postgres, csv)
+default_connector: csv
+
+# Connector configurations
+connectors:
+  # Snowflake configuration
+  snowflake:
+    # account: your_account.region
+    # user: your_username
+    # password: set_via_SNOWFLAKE_PASSWORD_env_var
+    # warehouse: your_warehouse
+    # database: your_database
+    # schema: your_schema
+    # role: your_role  # optional
+
+  # PostgreSQL configuration
+  postgres:
+    # host: localhost
+    # port: 5432
+    # database: your_database
+    # user: your_username
+    # password: set_via_POSTGRES_PASSWORD_env_var
+
+  # CSV configuration
+  csv:
+    base_path: ./data
+
+# LLM settings
+llm:
+  model: l2-gpt-4o
+  temperature: 0
+
+# RAG settings
+rag:
+  embedding_model: all-MiniLM-L6-v2
+  top_k: 3
+  vector_db_path: ./chroma_db
