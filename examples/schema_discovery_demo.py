@@ -28,17 +28,22 @@ def step1_build_schema_index():
     print("""
 This will:
 1. Connect to Snowflake
-2. Query INFORMATION_SCHEMA to find all tables
-3. Extract metadata (columns, types, row counts, comments)
-4. Embed metadata using AI model (384-dimensional vectors)
-5. Store in ChromaDB vector database
+2. Auto-discover ALL schemas from INFORMATION_SCHEMA.SCHEMATA
+3. Query all tables in each schema
+4. Extract metadata (columns, types, row counts, comments)
+5. Embed metadata using AI model (384-dimensional vectors)
+6. Store in ChromaDB vector database
+
+Configuration in config/settings.yaml controls which schemas to index.
+Current setting: auto_discover_schemas = true (indexes all schemas)
     """)
 
     input("Press Enter to continue...")
 
-    # Build index for PUBLIC schema (adjust as needed)
+    # Build index using config from settings.yaml
+    # You can override with explicit parameters if needed:
+    # build_schema_index_for_snowflake(database='MY_DB', schema='MY_SCHEMA')
     build_schema_index_for_snowflake(
-        schema='PUBLIC',      # Your schema name
         include_sample=False, # Set True to include sample data
         max_tables=None       # None = all tables, or set a limit for testing
     )
@@ -102,7 +107,7 @@ Now the agent will:
 
     # Example DQ queries
     dq_queries = [
-        "how many duplicate rows are in the customers table?",
+        "how many duplicate rows are in the products table?",
     ]
 
     for query in dq_queries:

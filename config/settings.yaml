@@ -15,6 +15,20 @@ connectors:
     # schema: your_schema
     # role: your_role  # optional
 
+    # Schema discovery settings (for automatic table indexing)
+    discovery:
+      database: null # null = use current database from connector config
+
+      # Option 1: Auto-discover ALL schemas (recommended)
+      auto_discover_schemas: true # Automatically finds all schemas in database
+      exclude_schemas: [] # Optional: schemas to skip, e.g., [INFORMATION_SCHEMA, TEMP]
+
+      # Option 2: Index single schema
+      # schema: PUBLIC
+
+      # Option 3: Index specific multiple schemas
+      # schemas: [PUBLIC, ANALYTICS, STAGING]
+
   # PostgreSQL configuration
   postgres:
     # host: localhost
