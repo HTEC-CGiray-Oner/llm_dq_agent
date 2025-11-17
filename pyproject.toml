@@ -1,13 +1,39 @@
 [tool.poetry]
-name = "llm-dq-package"
+name = "llm-dq-agent"
 version = "0.1.0"
-description = "packaged version of the work done"
+description = "LLM Agent for Data Quality Checks"
 authors = ["HTEC-CGiray-Oner <cihan.giray.oner@htec.group.com>"]
+license = "MIT"
 readme = "README.md"
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+# LLM & Agent Core
+langchain-core = "^0.3.0"
+langchain-community = "^0.3.0"
+langchain-openai = "^0.2.0"
+langchain-chroma = "^0.1.0"
+langchain-huggingface = "^0.1.0"
+pydantic = "^2.0"
+# API
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+# Data & RAG
+pandas = "^2.2.0"
+chromadb = "^0.4.24"
+sentence-transformers = "^2.2.2"
+sqlalchemy = "^2.0.25"
+openai = "^1.0.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.5"
+black = "^23.12.1"
+isort = "^5.10.1"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+python-dotenv = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core"]
