@@ -151,13 +151,13 @@ result = check_dataset_duplicates('MY_TABLE', connector_type='snowflake')
 print(result)  # {'dataset_id': 'MY_TABLE', 'duplicate_qty': 5, 'status': 'failure'}
 ```
 
-### Example 3: Natural Language Agent Query
+### Example 3: Natural Language Agent Query with Auto-Discovery
 ```python
-from src.agent.planner import run_dq_check
+from src.agent.smart_planner import run_smart_dq_check
 
-# Agent extracts: connector_type='snowflake', dataset_id='CUSTOMERS'
-query = "Check for duplicate rows in Snowflake CUSTOMERS table"
-result = run_dq_check(query)
+# Agent automatically discovers CUSTOMERS table in Snowflake
+query = "Check for duplicate rows in Snowflake customers table"
+result = run_smart_dq_check(query)
 ```
 
 ### Example 4: Using Default Connector
@@ -197,7 +197,7 @@ result = check_dataset_duplicates('MY_TABLE')
 
 4. **Use it:**
    ```python
-   from src.agent.planner import run_dq_check
+   from src.agent.smart_planner import run_smart_dq_check
 
    result = run_dq_check("Check duplicates in ORDERS table")
    ```

@@ -12,8 +12,8 @@ def get_default_connector_type() -> str:
     if os.path.exists(settings_path):
         with open(settings_path, 'r') as f:
             settings = yaml.safe_load(f)
-            return settings.get('default_connector', 'csv')
-    return 'csv'
+            return settings.get('default_connector', 'snowflake')
+    return 'snowflake'
 
 def load_data_by_id(dataset_id: str, connector_type: Optional[str] = None, **kwargs) -> pd.DataFrame:
     """
@@ -21,7 +21,7 @@ def load_data_by_id(dataset_id: str, connector_type: Optional[str] = None, **kwa
 
     Args:
         dataset_id: The identifier for the dataset (table name, file name, etc.)
-        connector_type: Type of connector to use ('snowflake', 'postgres', 'csv').
+        connector_type: Type of connector to use ('snowflake', 'postgres').
                        If None, uses default from settings.yaml
         **kwargs: Additional parameters passed to the connector's load_data method
 
@@ -60,7 +60,7 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
     Args:
         dataset_id (str): Full table identifier. Examples:
                          - 'SCHEMA.TABLE' or 'DATABASE.SCHEMA.TABLE'
-        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres', 'csv').
+        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres').
                                        If not specified, uses default from settings.
 
     Returns:
@@ -91,7 +91,7 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
         "status": "success" if duplicate_numb == 0 else "failure"
     }
 
-# This list is used by the RAG index_builder and the AgentExecutor
+# Available data quality check functions
 DQ_TOOLS = [check_dataset_duplicates]
 
 if __name__ == '__main__':

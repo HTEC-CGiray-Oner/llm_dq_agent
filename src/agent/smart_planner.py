@@ -18,56 +18,69 @@ from src.retrieval.schema_indexer import SchemaIndexer
 
 def get_schema_aware_retriever():
     """Initialize schema discovery for finding relevant tables."""
-    return SchemaIndexer(connector_type='snowflake')
+    return SchemaIndexer()  # No specific connector - search all
 
 
-def check_duplicates_snowflake(dataset_id: str) -> dict:
+def check_duplicates_with_connector(dataset_id: str, connector_type: str = 'snowflake') -> dict:
     """
-    Check for duplicate rows in a Snowflake table.
+    Check for duplicate rows in a database table.
 
     Args:
-        dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE')
+        dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' or 'schema.table')
+        connector_type: Type of database connector ('snowflake', 'postgres', etc.)
 
     Returns:
         Dictionary with duplicate count and status
     """
-    return check_dataset_duplicates(dataset_id, connector_type='snowflake')
+    return check_dataset_duplicates(dataset_id, connector_type=connector_type)
 
 
 def create_smart_dq_agent():
     """
     Creates an enhanced LLM agent that can discover tables automatically.
     """
-    # Convert DQ function to tool with Snowflake connector
+    # Convert DQ function to tool supporting multiple connectors
     dq_tool = StructuredTool.from_function(
-        func=check_duplicates_snowflake,
+        func=check_duplicates_with_connector,
         name="check_dataset_duplicates",
-        description="Check for duplicate rows in a Snowflake table. Provide the full table name (DATABASE.SCHEMA.TABLE)."
+        description="""Check for duplicate rows in a database table.
+        Args:
+            dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+            connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
+        """
     )
 
     # Define the enhanced prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-         """You are an expert Data Quality Agent with access to a Snowflake database schema discovery system.
+         """You are an expert Data Quality Agent with access to multiple database systems (Snowflake, PostgreSQL, etc.).
 
          Your task:
-         1. Understand the user's data quality request
-         2. The system will provide you with RELEVANT TABLES from Snowflake found via semantic search
-         3. Select the most appropriate table from the provided options
-         4. Call the data quality check function with the full table name
+         1. Understand the user's data quality request - pay attention to which data source they mention (Snowflake, PostgreSQL, etc.)
+         2. The system will provide you with RELEVANT TABLES found via semantic search
+         3. Each table shows its DATA SOURCE (SNOWFLAKE, POSTGRES, etc.) and Connector Type
+         4. Select the most appropriate table from the provided options, MATCHING the data source the user asked about
+         5. Call the data quality check function with BOTH the table name AND the connector_type parameter
 
          The RELEVANT TABLES context will show you:
+         - Connector Type: The lowercase connector name (snowflake, postgres, etc.)
+         - DATA SOURCE: Which system the table is from (SNOWFLAKE, POSTGRES, etc.)
          - Table names and full paths
          - Column information
          - Row counts and metadata
 
-         Choose the best matching table based on:
+         IMPORTANT: Choose the best matching table based on:
+         - DATA SOURCE match: If user says "Snowflake", choose SNOWFLAKE tables. If they say "PostgreSQL" or "Postgres", choose POSTGRES tables.
          - Column names that match the user's intent
          - Table description/purpose
          - Relevance score
 
-         Always use the full table name (DATABASE.SCHEMA.TABLE) when calling the check_dataset_duplicates function.
-         The system will automatically use the Snowflake connector.
+         CRITICAL: When calling check_dataset_duplicates, you MUST provide BOTH parameters:
+         - dataset_id: The full table name (e.g., 'DATABASE.SCHEMA.TABLE')
+         - connector_type: The lowercase connector type from "Connector Type" field (e.g., 'snowflake', 'postgres')
+
+         Example: check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
+         Example: check_dataset_duplicates(dataset_id="public.davar", connector_type="postgres")
          """
         ),
         MessagesPlaceholder(variable_name="chat_history"),
@@ -122,7 +135,8 @@ def run_smart_dq_check(query: str, top_k_tables: int = 3):
     # Display discovered tables
     print(f"\nFound {len(relevant_tables)} relevant table(s):\n")
     for table in relevant_tables:
-        print(f"  {table['rank']}. {table['full_name']}")
+        connector = table['connector_type'].upper()
+        print(f"  {table['rank']}. [{connector}] {table['full_name']}")
         print(f"     Relevance: {table['relevance_score']:.2%}")
         print()
 
@@ -132,7 +146,9 @@ def run_smart_dq_check(query: str, top_k_tables: int = 3):
 
     tables_context = "RELEVANT TABLES (ranked by relevance):\n\n"
     for table in relevant_tables:
+        connector = table['connector_type'].upper()
         tables_context += f"--- Table #{table['rank']} ---\n"
+        tables_context += f"Connector Type: {connector}\n"
         tables_context += f"Full Name: {table['full_name']}\n"
         tables_context += f"Relevance: {table['relevance_score']:.2%}\n"
         tables_context += f"Metadata:\n{table['metadata']}\n\n"

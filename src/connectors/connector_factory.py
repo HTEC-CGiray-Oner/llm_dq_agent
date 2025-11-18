@@ -4,7 +4,6 @@ from typing import Dict, Any, Optional
 from .base_connector import BaseConnector
 from .snowflake_connector import SnowflakeConnector
 from .postgres_connector import PostgresConnector
-from .csv_connector import CSVConnector
 import yaml
 from dotenv import load_dotenv
 
@@ -19,7 +18,6 @@ class ConnectorFactory:
         'snowflake': SnowflakeConnector,
         'postgres': PostgresConnector,
         'postgresql': PostgresConnector,
-        'csv': CSVConnector,
     }
 
     @classmethod
@@ -28,7 +26,7 @@ class ConnectorFactory:
         Create a connector instance based on type.
 
         Args:
-            connector_type: Type of connector ('snowflake', 'postgres', 'csv')
+            connector_type: Type of connector ('snowflake', 'postgres')
             config: Configuration dictionary. If None, loads from settings.yaml and .env
 
         Returns:
@@ -84,9 +82,6 @@ class ConnectorFactory:
                 'database': 'POSTGRES_DATABASE',
                 'user': 'POSTGRES_USER',
                 'password': 'POSTGRES_PASSWORD',
-            },
-            'csv': {
-                'base_path': 'CSV_BASE_PATH',
             }
         }
 
@@ -95,6 +90,10 @@ class ConnectorFactory:
                 env_value = os.getenv(env_key)
                 if env_value:
                     config[config_key] = env_value
+
+        # Convert port to int if present
+        if 'port' in config and isinstance(config['port'], str):
+            config['port'] = int(config['port'])
 
         return config
 

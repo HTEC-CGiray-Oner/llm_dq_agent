@@ -9,6 +9,10 @@ import chromadb
 from src.connectors.schema_discovery import SchemaDiscovery
 from typing import Optional, List
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 SCHEMA_VECTOR_DB_PATH = "./chroma_db"
@@ -33,16 +37,23 @@ class SchemaIndexer:
         self.default_schemas = None
         self.auto_discover_schemas = False
         self.exclude_schemas = []
+        self.default_include_sample = False
+        self.default_sample_row_limit = 3
 
         if os.path.exists(settings_path):
             with open(settings_path, 'r') as f:
                 settings = yaml.safe_load(f)
-                discovery_config = settings.get('connectors', {}).get(self.connector_type, {}).get('discovery', {})
-                self.default_database = discovery_config.get('database')
-                self.default_schema = discovery_config.get('schema')
-                self.default_schemas = discovery_config.get('schemas')
-                self.auto_discover_schemas = discovery_config.get('auto_discover_schemas', False)
-                self.exclude_schemas = discovery_config.get('exclude_schemas', [])
+                connector_config = settings.get('connectors', {}).get(self.connector_type, {})
+                discovery_config = connector_config.get('discovery', {}) if connector_config else {}
+
+                # Get discovery settings with safe defaults
+                self.default_database = discovery_config.get('database') if discovery_config else None
+                self.default_schema = discovery_config.get('schema') if discovery_config else None
+                self.default_schemas = discovery_config.get('schemas') if discovery_config else None
+                self.auto_discover_schemas = discovery_config.get('auto_discover_schemas', False) if discovery_config else False
+                self.exclude_schemas = discovery_config.get('exclude_schemas', []) if discovery_config else []
+                self.default_include_sample = discovery_config.get('include_sample', False) if discovery_config else False
+                self.default_sample_row_limit = discovery_config.get('sample_row_limit', 3) if discovery_config else 3
 
     def _get_all_schemas(self, database: Optional[str] = None) -> List[str]:
         """Discover all schemas from INFORMATION_SCHEMA."""
@@ -53,21 +64,36 @@ class SchemaIndexer:
         with connector:
             cursor = connector._cursor
 
-            # Get current database if not specified
-            if not database:
-                cursor.execute("SELECT CURRENT_DATABASE()")
-                database = cursor.fetchone()[0]
+            if self.connector_type == 'snowflake':
+                # Snowflake schema discovery
+                if not database:
+                    cursor.execute("SELECT CURRENT_DATABASE()")
+                    database = cursor.fetchone()[0]
 
-            # Query all schemas
-            query = f"""
-            SELECT SCHEMA_NAME
-            FROM {database}.INFORMATION_SCHEMA.SCHEMATA
-            WHERE SCHEMA_NAME NOT IN ('INFORMATION_SCHEMA')
-            ORDER BY SCHEMA_NAME
-            """
+                query = f"""
+                SELECT SCHEMA_NAME
+                FROM {database}.INFORMATION_SCHEMA.SCHEMATA
+                WHERE SCHEMA_NAME NOT IN ('INFORMATION_SCHEMA')
+                ORDER BY SCHEMA_NAME
+                """
+                cursor.execute(query)
+                schemas = [row[0] for row in cursor.fetchall()]
 
-            cursor.execute(query)
-            schemas = [row[0] for row in cursor.fetchall()]
+            elif self.connector_type == 'postgres':
+                # PostgreSQL schema discovery
+                query = """
+                SELECT schema_name
+                FROM information_schema.schemata
+                WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'pg_temp_1', 'pg_toast_temp_1')
+                    AND schema_name NOT LIKE 'pg_temp_%'
+                    AND schema_name NOT LIKE 'pg_toast_temp_%'
+                ORDER BY schema_name
+                """
+                cursor.execute(query)
+                schemas = [row[0] for row in cursor.fetchall()]
+
+            else:
+                raise NotImplementedError(f"Schema discovery not implemented for {self.connector_type}")
 
             # Filter out excluded schemas
             schemas = [s for s in schemas if s not in self.exclude_schemas]
@@ -80,7 +106,8 @@ class SchemaIndexer:
         schema: Optional[str] = None,
         schemas: Optional[List[str]] = None,
         auto_discover_schemas: Optional[bool] = None,
-        include_sample: bool = False,
+        include_sample: Optional[bool] = None,
+        sample_row_limit: Optional[int] = None,
         max_tables: Optional[int] = None,
         recreate: bool = True
     ):
@@ -92,10 +119,14 @@ class SchemaIndexer:
             schema: Single schema to scan (None = use config)
             schemas: List of specific schemas to scan
             auto_discover_schemas: If True, automatically discover and index ALL schemas
-            include_sample: Include sample data
+            include_sample: Include sample data (None = use config, default: from settings.yaml)
+            sample_row_limit: Number of sample rows per table (None = use config)
             max_tables: Limit number of tables per schema
             recreate: If True, delete existing collection first
         """
+        # Use config defaults if not specified
+        include_sample = include_sample if include_sample is not None else self.default_include_sample
+        sample_row_limit = sample_row_limit or self.default_sample_row_limit
         # Use config defaults if not specified
         database = database or self.default_database
 
@@ -129,6 +160,7 @@ class SchemaIndexer:
                 database=database,
                 schema=schema_name,
                 include_sample=include_sample,
+                sample_row_limit=sample_row_limit,
                 max_tables=max_tables
             )
 
@@ -231,7 +263,8 @@ class SchemaIndexer:
 def build_schema_index_for_snowflake(
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    include_sample: bool = False,
+    include_sample: Optional[bool] = None,
+    sample_row_limit: Optional[int] = None,
     max_tables: Optional[int] = None
 ):
     """
@@ -239,13 +272,22 @@ def build_schema_index_for_snowflake(
 
     Usage:
         from src.retrieval.schema_indexer import build_schema_index_for_snowflake
-        build_schema_index_for_snowflake(schema='PUBLIC', max_tables=10)
+
+        # Use config defaults (sample data enabled by default)
+        build_schema_index_for_snowflake()
+
+        # Override to disable samples
+        build_schema_index_for_snowflake(include_sample=False)
+
+        # Change sample size
+        build_schema_index_for_snowflake(sample_row_limit=5)
     """
     indexer = SchemaIndexer('snowflake')
     indexer.build_schema_index(
         database=database,
         schema=schema,
         include_sample=include_sample,
+        sample_row_limit=sample_row_limit,
         max_tables=max_tables
     )
 
@@ -255,7 +297,6 @@ if __name__ == "__main__":
     print("Building schema index for Snowflake...")
     print("Using database and schema from settings.yaml (or current connection defaults)")
     build_schema_index_for_snowflake(
-        # database and schema will be read from settings.yaml
-        include_sample=False,
+        # Uses config defaults (include_sample and sample_row_limit from settings.yaml)
         max_tables=None  # None = all tables
     )

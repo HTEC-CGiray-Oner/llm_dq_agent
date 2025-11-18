@@ -80,6 +80,102 @@ class SchemaDiscovery:
             print(f"✓ Found {len(tables)} tables/views")
             return tables
 
+    def discover_postgres_tables(
+        self,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
+        include_views: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Discover all tables in PostgreSQL with their metadata.
+
+        Args:
+            database: Specific database to scan (None = current database)
+            schema: Specific schema to scan (None = current schema, default: public)
+            include_views: Whether to include views
+
+        Returns:
+            List of table metadata dictionaries
+        """
+        with self.connector:
+            cursor = self.connector._cursor
+
+            if not database:
+                cursor.execute("SELECT current_database()")
+                database = cursor.fetchone()[0]
+
+            if not schema:
+                schema = 'public'
+
+            print(f"Discovering tables in {database}.{schema}...")
+
+            # Query information schema for tables
+            query = """
+            SELECT
+                table_catalog as database_name,
+                table_schema as schema_name,
+                table_name,
+                table_type,
+                NULL as row_count,
+                NULL as bytes,
+                NULL as table_comment,
+                NULL as created,
+                NULL as last_altered
+            FROM information_schema.tables
+            WHERE table_schema = %s
+            """
+
+            if not include_views:
+                query += " AND table_type = 'BASE TABLE'"
+
+            query += " ORDER BY table_name"
+
+            cursor.execute(query, (schema,))
+            columns = [desc[0] for desc in cursor.description]
+            rows = cursor.fetchall()
+
+            tables = []
+            for row in rows:
+                table_info = dict(zip(columns, row))
+                # Normalize keys to match Snowflake format
+                table_info['DATABASE_NAME'] = table_info.pop('database_name')
+                table_info['SCHEMA_NAME'] = table_info.pop('schema_name')
+                table_info['TABLE_NAME'] = table_info.pop('table_name')
+                table_info['TABLE_TYPE'] = table_info.pop('table_type')
+                table_info['ROW_COUNT'] = table_info.pop('row_count')
+                table_info['BYTES'] = table_info.pop('bytes')
+                table_info['TABLE_COMMENT'] = table_info.pop('table_comment')
+                table_info['CREATED'] = table_info.pop('created')
+                table_info['LAST_ALTERED'] = table_info.pop('last_altered')
+                tables.append(table_info)
+
+            print(f"✓ Found {len(tables)} tables/views")
+            return tables
+
+    def discover_tables(
+        self,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
+        include_views: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Discover tables - automatically uses the right method for the connector type.
+
+        Args:
+            database: Specific database to scan
+            schema: Specific schema to scan
+            include_views: Whether to include views
+
+        Returns:
+            List of table metadata dictionaries
+        """
+        if self.connector_type == 'snowflake':
+            return self.discover_snowflake_tables(database, schema, include_views)
+        elif self.connector_type == 'postgres':
+            return self.discover_postgres_tables(database, schema, include_views)
+        else:
+            raise NotImplementedError(f"Table discovery not implemented for {self.connector_type}")
+
     def get_table_columns(
         self,
         table_name: str,
@@ -97,6 +193,20 @@ class SchemaDiscovery:
         Returns:
             List of column metadata dictionaries
         """
+        if self.connector_type == 'snowflake':
+            return self._get_snowflake_columns(table_name, database, schema)
+        elif self.connector_type == 'postgres':
+            return self._get_postgres_columns(table_name, database, schema)
+        else:
+            raise NotImplementedError(f"Column discovery not implemented for {self.connector_type}")
+
+    def _get_snowflake_columns(
+        self,
+        table_name: str,
+        database: Optional[str] = None,
+        schema: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get Snowflake column information."""
         with self.connector:
             cursor = self.connector._cursor
 
@@ -132,6 +242,53 @@ class SchemaDiscovery:
 
             return column_info
 
+    def _get_postgres_columns(
+        self,
+        table_name: str,
+        database: Optional[str] = None,
+        schema: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get PostgreSQL column information."""
+        with self.connector:
+            cursor = self.connector._cursor
+
+            if not database:
+                cursor.execute("SELECT current_database()")
+                database = cursor.fetchone()[0]
+
+            if not schema:
+                schema = 'public'
+
+            query = """
+            SELECT
+                column_name,
+                data_type,
+                is_nullable,
+                column_default,
+                NULL as column_comment
+            FROM information_schema.columns
+            WHERE table_schema = %s
+                AND table_name = %s
+            ORDER BY ordinal_position
+            """
+
+            cursor.execute(query, (schema, table_name))
+            columns = [desc[0] for desc in cursor.description]
+            rows = cursor.fetchall()
+
+            column_info = []
+            for row in rows:
+                col_dict = dict(zip(columns, row))
+                # Normalize keys to match Snowflake format
+                col_dict['COLUMN_NAME'] = col_dict.pop('column_name')
+                col_dict['DATA_TYPE'] = col_dict.pop('data_type')
+                col_dict['IS_NULLABLE'] = col_dict.pop('is_nullable')
+                col_dict['COLUMN_DEFAULT'] = col_dict.pop('column_default')
+                col_dict['COLUMN_COMMENT'] = col_dict.pop('column_comment')
+                column_info.append(col_dict)
+
+            return column_info
+
     def get_table_sample(
         self,
         table_name: str,
@@ -154,16 +311,31 @@ class SchemaDiscovery:
         with self.connector:
             cursor = self.connector._cursor
 
-            if not database:
-                cursor.execute("SELECT CURRENT_DATABASE()")
-                database = cursor.fetchone()[0]
+            if self.connector_type == 'snowflake':
+                if not database:
+                    cursor.execute("SELECT CURRENT_DATABASE()")
+                    database = cursor.fetchone()[0]
 
-            if not schema:
-                cursor.execute("SELECT CURRENT_SCHEMA()")
-                schema = cursor.fetchone()[0]
+                if not schema:
+                    cursor.execute("SELECT CURRENT_SCHEMA()")
+                    schema = cursor.fetchone()[0]
 
-            full_table_name = f"{database}.{schema}.{table_name}"
-            query = f"SELECT * FROM {full_table_name} LIMIT {limit}"
+                full_table_name = f"{database}.{schema}.{table_name}"
+                query = f"SELECT * FROM {full_table_name} LIMIT {limit}"
+
+            elif self.connector_type == 'postgres':
+                if not database:
+                    cursor.execute("SELECT current_database()")
+                    database = cursor.fetchone()[0]
+
+                if not schema:
+                    schema = 'public'
+
+                full_table_name = f"{schema}.{table_name}"
+                query = f"SELECT * FROM {full_table_name} LIMIT {limit}"
+
+            else:
+                raise NotImplementedError(f"Sample data not implemented for {self.connector_type}")
 
             cursor.execute(query)
             columns = [desc[0] for desc in cursor.description]
@@ -191,8 +363,8 @@ class SchemaDiscovery:
         Returns:
             Formatted metadata document as string
         """
-        # Get table info
-        tables = self.discover_snowflake_tables(database, schema)
+        # Get table info using connector-agnostic method
+        tables = self.discover_tables(database, schema)
         table_info = next((t for t in tables if t['TABLE_NAME'] == table_name), None)
 
         if not table_info:
@@ -204,8 +376,12 @@ class SchemaDiscovery:
         # Build document
         doc_parts = []
 
-        # Header
+        # Header with connector type
         full_name = f"{table_info['DATABASE_NAME']}.{table_info['SCHEMA_NAME']}.{table_info['TABLE_NAME']}"
+
+        # Add connector type info - helps agent distinguish between data sources
+        connector_display = self.connector_type.upper()
+        doc_parts.append(f"DATA SOURCE: {connector_display}")
         doc_parts.append(f"TABLE: {full_name}")
         doc_parts.append(f"Type: {table_info['TABLE_TYPE']}")
 
@@ -226,9 +402,12 @@ class SchemaDiscovery:
         # Sample data (optional)
         if include_sample:
             try:
-                sample_df = self.get_table_sample(table_name, database, schema, limit=3)
-                doc_parts.append("\nSAMPLE DATA:")
-                doc_parts.append(sample_df.to_string(index=False))
+                # Use provided limit or default to 3
+                limit = getattr(include_sample, '__self__', {}).get('sample_row_limit', 3) if isinstance(include_sample, bool) else 3
+                sample_df = self.get_table_sample(table_name, database, schema, limit=limit)
+                if not sample_df.empty:
+                    doc_parts.append("\nSAMPLE DATA:")
+                    doc_parts.append(sample_df.to_string(index=False))
             except Exception as e:
                 doc_parts.append(f"\nSample data unavailable: {str(e)}")
 
@@ -243,6 +422,7 @@ class SchemaDiscovery:
         database: Optional[str] = None,
         schema: Optional[str] = None,
         include_sample: bool = False,
+        sample_row_limit: int = 3,
         max_tables: Optional[int] = None
     ) -> List[Dict[str, str]]:
         """
@@ -252,12 +432,15 @@ class SchemaDiscovery:
             database: Database to scan
             schema: Schema to scan
             include_sample: Include sample data in metadata
+            sample_row_limit: Number of sample rows per table
             max_tables: Maximum number of tables to process
 
         Returns:
             List of dicts with 'table_name' and 'metadata' keys
         """
-        tables = self.discover_snowflake_tables(database, schema)
+        # Store sample_row_limit for use in create_table_metadata_document
+        self._sample_row_limit = sample_row_limit
+        tables = self.discover_tables(database, schema)
 
         if max_tables:
             tables = tables[:max_tables]

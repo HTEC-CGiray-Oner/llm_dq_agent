@@ -97,22 +97,22 @@ result = check_dataset_duplicates('MY_TABLE', connector_type='snowflake')
 
 ### 3. Using with LLM Agent
 
-The agent can automatically detect the connector type from natural language:
+The agent can automatically detect the connector type from natural language and discover tables:
 
 ```python
-from src.agent.planner import run_dq_check
+from src.agent.smart_planner import run_smart_dq_check
 
-# Agent will extract connector_type='snowflake' and dataset_id='CUSTOMERS'
-query = "Check for duplicates in Snowflake table CUSTOMERS"
-result = run_dq_check(query)
+# Agent will automatically find and use Snowflake CUSTOMERS table
+query = "Check for duplicates in Snowflake customers table"
+result = run_smart_dq_check(query)
 
-# Agent will use default connector
+# Agent will discover relevant tables and select the best match
 query = "Check for duplicates in orders table"
-result = run_dq_check(query)
+result = run_smart_dq_check(query)
 
-# Agent will extract connector_type='csv'
-query = "Check CSV file sales_data.csv for duplicates"
-result = run_dq_check(query)
+# Agent can distinguish between different connectors
+query = "Check for duplicates in postgres users table"
+result = run_smart_dq_check(query)
 ```
 
 ## Connector-Specific Features

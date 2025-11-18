@@ -2,11 +2,13 @@
 
 """
 This example shows the complete workflow:
-1. Discover all tables in Snowflake
+1. Discover all tables from Snowflake and/or PostgreSQL
 2. Index their metadata into a vector database
-3. Use natural language to find the right table# Run the interactive demo
-poetry run python examples/schema_discovery_demo.py
+3. Use natural language to find the right table
 4. Run data quality checks automatically
+
+Usage:
+    poetry run python examples/schema_discovery_demo.py
 """
 
 import sys
@@ -19,7 +21,7 @@ from src.agent.smart_planner import run_smart_dq_check
 
 def step1_build_schema_index():
     """
-    Step 1: Discover and index all tables from Snowflake.
+    Step 1: Discover and index all tables from data sources.
     This only needs to be done once (or when schema changes).
     """
     print("\n" + "="*80)
@@ -27,26 +29,45 @@ def step1_build_schema_index():
     print("="*80)
     print("""
 This will:
-1. Connect to Snowflake
-2. Auto-discover ALL schemas from INFORMATION_SCHEMA.SCHEMATA
+1. Connect to your data source(s)
+2. Auto-discover ALL schemas from INFORMATION_SCHEMA
 3. Query all tables in each schema
 4. Extract metadata (columns, types, row counts, comments)
 5. Embed metadata using AI model (384-dimensional vectors)
 6. Store in ChromaDB vector database
 
 Configuration in config/settings.yaml controls which schemas to index.
-Current setting: auto_discover_schemas = true (indexes all schemas)
     """)
 
-    input("Press Enter to continue...")
+    print("\nWhich connector(s) do you want to index?")
+    print("1. Snowflake only")
+    print("2. PostgreSQL only")
+    print("3. Both (Snowflake + PostgreSQL)")
 
-    # Build index using config from settings.yaml
-    # You can override with explicit parameters if needed:
-    # build_schema_index_for_snowflake(database='MY_DB', schema='MY_SCHEMA')
-    build_schema_index_for_snowflake(
-        include_sample=False, # Set True to include sample data
-        max_tables=None       # None = all tables, or set a limit for testing
-    )
+    choice = input("\nEnter choice (1-3): ").strip()
+
+    if choice == '1':
+        print("\nIndexing Snowflake tables...")
+        indexer = SchemaIndexer(connector_type='snowflake')
+        indexer.build_schema_index(recreate=True)
+
+    elif choice == '2':
+        print("\nIndexing PostgreSQL tables...")
+        indexer = SchemaIndexer(connector_type='postgres')
+        indexer.build_schema_index(recreate=True)
+
+    elif choice == '3':
+        print("\nIndexing Snowflake tables...")
+        snowflake_indexer = SchemaIndexer(connector_type='snowflake')
+        snowflake_indexer.build_schema_index(recreate=True)
+
+        print("\nIndexing PostgreSQL tables...")
+        postgres_indexer = SchemaIndexer(connector_type='postgres')
+        postgres_indexer.build_schema_index(recreate=False)  # Append
+
+    else:
+        print("Invalid choice, skipping indexing")
+        return
 
     print("\n✓ Schema index built successfully!")
     print("  This only needs to be done once (or when schema changes)")
@@ -60,11 +81,12 @@ def step2_search_tables():
     print("STEP 2: SEARCHING FOR RELEVANT TABLES")
     print("="*80)
 
-    indexer = SchemaIndexer('snowflake')
+    indexer = SchemaIndexer()  # Connector-agnostic search
 
     # Example queries
     test_queries = [
         "customer information and contact details",
+        "product data",
     ]
 
     for query in test_queries:
@@ -106,8 +128,13 @@ Now the agent will:
     input("Press Enter to continue...")
 
     # Example DQ queries
+    print("\nExample queries:")
+    print("  - 'how many duplicate rows are in the snowflake products table?'")
+    print("  - 'how many duplicate rows are in the postgres customers table?'")
+
     dq_queries = [
-        "how many duplicate rows are in the products table?",
+        "how many duplicate rows are in the snowflake products table?",
+        "how many duplicate rows are in the postgres customers table?",
     ]
 
     for query in dq_queries:
@@ -129,14 +156,15 @@ def demo_workflow():
 
     print("""
 This demo shows how the system:
-- Automatically discovers all tables in your Snowflake database
+- Automatically discovers tables from multiple data sources (Snowflake, PostgreSQL)
 - Indexes table metadata (columns, types, descriptions)
 - Uses AI embeddings to find relevant tables from natural language
+- Distinguishes between tables from different connectors
 - Runs data quality checks on the right table without manual specification
 
 Prerequisites:
-✓ Snowflake credentials configured in .env
-✓ Connection to Snowflake working
+✓ Database credentials configured in .env and config/settings.yaml
+✓ Connections working (test with: poetry install -E snowflake -E postgres)
     """)
 
     choice = input("\nChoose an option:\n"
