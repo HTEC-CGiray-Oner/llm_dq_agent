@@ -66,7 +66,8 @@ class SchemaIndexer:
 
             if self.connector_type == 'snowflake':
                 # Snowflake schema discovery
-                if not database:
+                # Get current database if not specified
+                if database is None or database == '':
                     cursor.execute("SELECT CURRENT_DATABASE()")
                     database = cursor.fetchone()[0]
 
