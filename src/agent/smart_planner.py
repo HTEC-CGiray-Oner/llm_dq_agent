@@ -12,7 +12,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.tools import StructuredTool
-from src.data_quality.checks import check_dataset_duplicates
+from src.data_quality.checks import DQ_TOOLS
 from src.retrieval.schema_indexer import SchemaIndexer
 
 
@@ -21,34 +21,58 @@ def get_schema_aware_retriever():
     return SchemaIndexer()  # No specific connector - search all
 
 
-def check_duplicates_with_connector(dataset_id: str, connector_type: str = 'snowflake') -> dict:
+def create_dq_tool_wrapper(dq_function):
     """
-    Check for duplicate rows in a database table.
-
-    Args:
-        dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' or 'schema.table')
-        connector_type: Type of database connector ('snowflake', 'postgres', etc.)
-
-    Returns:
-        Dictionary with duplicate count and status
+    Create a wrapper function for DQ tools that adds connector support.
     """
-    return check_dataset_duplicates(dataset_id, connector_type=connector_type)
+    def wrapper(dataset_id: str, connector_type: str = 'snowflake') -> dict:
+        return dq_function(dataset_id, connector_type=connector_type)
+
+    # Preserve the original function's metadata
+    wrapper.__name__ = dq_function.__name__
+    wrapper.__doc__ = dq_function.__doc__ or f"Execute {dq_function.__name__} with connector support."
+
+    return wrapper
 
 
 def create_smart_dq_agent():
     """
     Creates an enhanced LLM agent that can discover tables automatically.
     """
-    # Convert DQ function to tool supporting multiple connectors
-    dq_tool = StructuredTool.from_function(
-        func=check_duplicates_with_connector,
-        name="check_dataset_duplicates",
-        description="""Check for duplicate rows in a database table.
-        Args:
-            dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
-            connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
-        """
-    )
+    # Convert all DQ functions to tools supporting multiple connectors
+    dq_tools = []
+
+    for dq_function in DQ_TOOLS:
+        # Create wrapper function
+        wrapper_func = create_dq_tool_wrapper(dq_function)
+
+        # Create tool description based on function name
+        if 'duplicate' in dq_function.__name__:
+            description = """Check for duplicate rows in a database table.
+            Args:
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
+            """
+        elif 'null' in dq_function.__name__:
+            description = """Analyze null values and missing data in a database table.
+            Args:
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
+            """
+        else:
+            description = f"""Execute data quality check: {dq_function.__name__}
+            Args:
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
+            """
+
+        # Create structured tool
+        tool = StructuredTool.from_function(
+            func=wrapper_func,
+            name=dq_function.__name__,
+            description=description
+        )
+        dq_tools.append(tool)
 
     # Define the enhanced prompt
     prompt = ChatPromptTemplate.from_messages([
@@ -57,10 +81,13 @@ def create_smart_dq_agent():
 
          Your task:
          1. Understand the user's data quality request - pay attention to which data source they mention (Snowflake, PostgreSQL, etc.)
-         2. The system will provide you with RELEVANT TABLES found via semantic search
-         3. Each table shows its DATA SOURCE (SNOWFLAKE, POSTGRES, etc.) and Connector Type
-         4. Select the most appropriate table from the provided options, MATCHING the data source the user asked about
-         5. Call the data quality check function with BOTH the table name AND the connector_type parameter
+         2. Identify the TYPE OF DATA QUALITY CHECK requested:
+            - For "duplicates", "duplicate rows", "duplicate records" → use check_dataset_duplicates
+            - For "null values", "missing data", "nulls", "missing values" → use check_dataset_null_values
+         3. The system will provide you with RELEVANT TABLES found via semantic search
+         4. Each table shows its DATA SOURCE (SNOWFLAKE, POSTGRES, etc.) and Connector Type
+         5. Select the most appropriate table from the provided options, MATCHING the data source the user asked about
+         6. Call the appropriate data quality check function with BOTH the table name AND the connector_type parameter
 
          The RELEVANT TABLES context will show you:
          - Connector Type: The lowercase connector name (snowflake, postgres, etc.)
@@ -75,12 +102,13 @@ def create_smart_dq_agent():
          - Table description/purpose
          - Relevance score
 
-         CRITICAL: When calling check_dataset_duplicates, you MUST provide BOTH parameters:
+         CRITICAL: When calling ANY data quality function, you MUST provide BOTH parameters:
          - dataset_id: The full table name (e.g., 'DATABASE.SCHEMA.TABLE')
          - connector_type: The lowercase connector type from "Connector Type" field (e.g., 'snowflake', 'postgres')
 
-         Example: check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
-         Example: check_dataset_duplicates(dataset_id="public.davar", connector_type="postgres")
+         Examples:
+         - check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
+         - check_dataset_null_values(dataset_id="public.customers", connector_type="postgres")
          """
         ),
         MessagesPlaceholder(variable_name="chat_history"),
@@ -96,9 +124,9 @@ def create_smart_dq_agent():
         openai_api_base=os.getenv("OPENAI_BASE_URL")
     )
 
-    # Create agent
-    agent = create_tool_calling_agent(llm, [dq_tool], prompt)
-    executor = AgentExecutor(agent=agent, tools=[dq_tool], verbose=True)
+    # Create agent with all DQ tools
+    agent = create_tool_calling_agent(llm, dq_tools, prompt)
+    executor = AgentExecutor(agent=agent, tools=dq_tools, verbose=True)
 
     return executor
 

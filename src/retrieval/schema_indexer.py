@@ -213,9 +213,54 @@ class SchemaIndexer:
         print(f"  - Path: {SCHEMA_VECTOR_DB_PATH}")
         print(f"{'='*70}\n")
 
+    def _get_database_mappings(self) -> dict:
+        """
+        Build dynamic database name to connector type mapping from indexed metadata.
+        This learns the mapping automatically instead of hardcoding.
+
+        Returns:
+            Dict mapping database names to connector types
+        """
+        mappings = {}
+
+        # Connect to vector store
+        client = chromadb.PersistentClient(path=SCHEMA_VECTOR_DB_PATH)
+
+        try:
+            collection = client.get_collection(SCHEMA_COLLECTION_NAME)
+
+            # Get all metadata to analyze database patterns
+            all_results = collection.get(include=['metadatas'])
+
+            if all_results['metadatas']:
+                for metadata in all_results['metadatas']:
+                    full_name = metadata.get('full_name', '')
+                    connector_type = metadata.get('connector_type', '')
+
+                    # Extract database name from full table path
+                    if connector_type and full_name:
+                        # For PostgreSQL: database.schema.table -> database = database name
+                        # For Snowflake: DATABASE.SCHEMA.TABLE -> DATABASE = database name
+                        parts = full_name.split('.')
+                        if len(parts) >= 2:
+                            database_name = parts[0]
+                            # Map both exact and partial matches
+                            mappings[database_name.lower()] = connector_type
+
+                            # Also map common words in database name
+                            db_words = database_name.lower().replace('_', ' ').split()
+                            for word in db_words:
+                                if len(word) >= 3:  # Avoid very short words
+                                    mappings[word] = connector_type
+
+        except Exception as e:
+            print(f"Warning: Could not build database mappings: {e}")
+
+        return mappings
+
     def search_tables(self, query: str, top_k: int = 3) -> List[dict]:
         """
-        Search for relevant tables based on a natural language query.
+        Search for relevant tables based on a natural language query with intelligent database matching.
 
         Args:
             query: User's natural language query
@@ -224,6 +269,33 @@ class SchemaIndexer:
         Returns:
             List of dicts with table info and relevance scores
         """
+        # Get dynamic database mappings from indexed metadata
+        database_mappings = self._get_database_mappings()
+
+        # Detect database preference from query
+        preferred_connector = None
+        query_lower = query.lower()
+
+        # Check for explicit database mentions first
+        if any(db in query_lower for db in ['postgres', 'postgresql']):
+            preferred_connector = 'postgres'
+        elif any(db in query_lower for db in ['snowflake']):
+            preferred_connector = 'snowflake'
+        else:
+            # Check for database names/words from actual indexed databases
+            query_words = query_lower.replace('_', ' ').split()
+            for word in query_words:
+                if word in database_mappings:
+                    preferred_connector = database_mappings[word]
+                    break
+
+            # Also check for partial matches in the full query
+            if not preferred_connector:
+                for db_name, connector in database_mappings.items():
+                    if db_name in query_lower:
+                        preferred_connector = connector
+                        break
+
         # Connect to vector store
         client = chromadb.PersistentClient(path=SCHEMA_VECTOR_DB_PATH)
 
@@ -233,15 +305,16 @@ class SchemaIndexer:
             print(f"Schema collection '{SCHEMA_COLLECTION_NAME}' not found. Run build_schema_index() first.")
             return []
 
-        # Perform similarity search
+        # Perform similarity search with expanded results
         query_embedding = self.embeddings.embed_query(query)
+        search_limit = max(top_k * 2, 6)  # Get more results for filtering/boosting
         results = collection.query(
             query_embeddings=[query_embedding],
-            n_results=top_k,
+            n_results=search_limit,
             include=['documents', 'metadatas', 'distances']
         )
 
-        # Format results
+        # Format and boost results based on database preference
         relevant_tables = []
         if results['documents'] and len(results['documents'][0]) > 0:
             for i, (doc, metadata, distance) in enumerate(zip(
@@ -249,16 +322,47 @@ class SchemaIndexer:
                 results['metadatas'][0],
                 results['distances'][0]
             )):
+                base_relevance = 1 - distance  # Convert distance to similarity
+                boosted_relevance = base_relevance
+
+                # Apply database preference boost
+                if preferred_connector and metadata['connector_type'] == preferred_connector:
+                    boosted_relevance = min(base_relevance + 0.3, 1.0)  # Cap at 1.0
+
+                # Apply table name matching boost
+                table_name = metadata.get('table_name', '').lower()
+                query_words = query_lower.split()
+
+                # Boost if table name matches words in query
+                table_name_boost = 0
+                for word in query_words:
+                    if len(word) >= 3 and word in table_name:
+                        table_name_boost += 0.2  # Additional boost for table name match
+
+                # Apply table name boost
+                boosted_relevance = min(boosted_relevance + table_name_boost, 1.0)
+
                 relevant_tables.append({
                     'rank': i + 1,
                     'table_name': metadata['table_name'],
                     'full_name': metadata['full_name'],
                     'metadata': doc,
-                    'relevance_score': 1 - distance,  # Convert distance to similarity
-                    'connector_type': metadata['connector_type']
-                })
+                    'relevance_score': boosted_relevance,
+                    'connector_type': metadata['connector_type'],
+                    'original_relevance': base_relevance,  # Keep original for debugging
+                    'boosted': preferred_connector == metadata['connector_type'],
+                    'table_boost': table_name_boost,
+                    'detected_db': preferred_connector,  # Show what database was detected
+                    'db_mappings_used': database_mappings if preferred_connector else None
+                })        # Re-sort by boosted relevance and take top_k
+        relevant_tables.sort(key=lambda x: x['relevance_score'], reverse=True)
+        final_results = relevant_tables[:top_k]
 
-        return relevant_tables
+        # Update ranks after re-sorting
+        for i, table in enumerate(final_results):
+            table['rank'] = i + 1
+
+        return final_results
 
 
 def build_schema_index_for_snowflake(

@@ -1,5 +1,5 @@
-# src/data_quality/checks.py
 import pandas as pd
+import numpy as np
 from typing import Dict, Any, Optional
 import yaml
 import os
@@ -69,20 +69,7 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
     # 1. Load the data based on the ID provided by the LLM
     df = load_data_by_id(dataset_id, connector_type=connector_type)
 
-    # 2. Duplicate Detection Logic
-    byte_value_col = [
-        df[i].name
-        for i in df.columns
-        if df[i].dtype == object and
-           not df[i].empty and
-           ("b'" in str(df[i].iloc[0]) or "{" in str(df[i].iloc[0]))
-    ]
-
-    # 3. Handle bytearrays/complex types
-    for col_n in byte_value_col:
-        df[col_n] = df[col_n].apply(lambda x: str(x))
-
-    # 4. Counting duplicates
+    # 2. Counting duplicates
     duplicate_numb = len(df) - len(df.drop_duplicates())
 
     return {
@@ -91,10 +78,107 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
         "status": "success" if duplicate_numb == 0 else "failure"
     }
 
+def check_dataset_null_values(dataset_id: str, connector_type: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Analyzes a dataset for null, missing, and empty values across all columns.
+
+    This function is crucial for data completeness assessment, identifying columns
+    with data gaps that may impact analysis or require imputation strategies.
+    It automatically handles various null representations including explicit NULLs,
+    empty strings, and '<NA>' placeholder values commonly found in data exports.
+
+    The analysis provides both absolute counts and percentages to help prioritize
+    data quality remediation efforts based on the severity of missingness.
+
+    Args:
+        dataset_id (str): Full table identifier for the dataset to analyze. Examples:
+                         - 'SCHEMA.TABLE' for PostgreSQL
+                         - 'DATABASE.SCHEMA.TABLE' for Snowflake
+                         - 'TABLE' for default schema
+        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres').
+                                       If not specified, uses default from settings.yaml
+
+    Returns:
+        Dict[str, Any]: A dictionary containing:
+            - dataset_id: The identifier of the analyzed dataset
+            - total_rows: Total number of rows in the dataset
+            - columns_with_nulls: Number of columns containing null values
+            - null_analysis: List of dictionaries for each column with nulls, containing:
+                - column_name: Name of the column
+                - null_count: Absolute number of null/missing values
+                - null_percentage: Percentage of null values (0-100)
+            - status: 'success' if analysis completed, 'failure' if errors occurred
+
+    Example:
+        result = check_dataset_null_values("SALES.CUSTOMERS")
+        # Returns: {
+        #   'dataset_id': 'SALES.CUSTOMERS',
+        #   'total_rows': 50000,
+        #   'columns_with_nulls': 3,
+        #   'null_analysis': [
+        #     {'column_name': 'email', 'null_count': 4000, 'null_percentage': 8.0},
+        #     {'column_name': 'phone', 'null_count': 5000, 'null_percentage': 10.0}
+        #   ],
+        #   'status': 'success'
+        # }
+    """
+    try:
+        # 1. Load the data based on the ID provided by the LLM
+        df = load_data_by_id(dataset_id, connector_type=connector_type)
+
+        # 2. Standardize null representations
+        # Replace common null placeholders with pandas NaN for consistent analysis
+        df_clean = df.copy()
+        df_clean.replace('<NA>', np.nan, inplace=True)
+        df_clean.replace('', np.nan, inplace=True)
+        df_clean.replace('NULL', np.nan, inplace=True)
+        df_clean.replace('null', np.nan, inplace=True)
+
+        # 3. Analyze null values for each column
+        null_analysis = []
+        total_rows = len(df_clean)
+
+        for col in df_clean.columns:
+            # Count non-null values using pandas count() method
+            defined_values_count = df_clean[col].count()
+            null_count = total_rows - defined_values_count
+
+            # Only include columns that have null values
+            if null_count > 0:
+                null_percentage = round((null_count / total_rows) * 100, 2)
+
+                null_analysis.append({
+                    'column_name': col,
+                    'null_count': null_count,
+                    'null_percentage': null_percentage
+                })
+
+        # 4. Sort by null percentage (highest first) for prioritization
+        null_analysis.sort(key=lambda x: x['null_percentage'], reverse=True)
+
+        return {
+            "dataset_id": dataset_id,
+            "total_rows": total_rows,
+            "total_columns": len(df_clean.columns),
+            "columns_with_nulls": len(null_analysis),
+            "null_analysis": null_analysis,
+            "status": "success"
+        }
+
+    except Exception as e:
+        return {
+            "dataset_id": dataset_id,
+            "error": str(e),
+            "status": "failure"
+        }
+
 # Available data quality check functions
-DQ_TOOLS = [check_dataset_duplicates]
+DQ_TOOLS = [check_dataset_duplicates, check_dataset_null_values]
 
 if __name__ == '__main__':
     # Example execution:
-    result = check_dataset_duplicates("test_data_set")
-    print(result)
+    result1 = check_dataset_duplicates("test_data_set")
+    print("Duplicate Check Result:", result1)
+
+    result2 = check_dataset_null_values("test_data_set")
+    print("Null Values Check Result:", result2)
