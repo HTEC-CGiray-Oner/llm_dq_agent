@@ -319,40 +319,52 @@ class ReportTemplates:
         <p><strong>Columns Analyzed:</strong> {len(stats)} columns</p>
 """
 
-                    # Categorize columns by type
-                    numeric_cols = []
-                    categorical_cols = []
+                    # Show key statistics for all columns (without classification)
+                    html += "<p><strong>Column Statistics (Count, Unique, Top, Freq, Min, Max):</strong></p>"
+                    html += "<div style='max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;'>"
+                    html += "<table style='width: 100%; border-collapse: collapse;'>"
+                    html += "<tr style='background: #f8f9fa; font-weight: bold;'>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Column</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Count</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Unique</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Top</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Freq</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Min</th>"
+                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Max</th>"
+                    html += "</tr>"
 
                     for col_name, col_stats in stats.items():
-                        if 'mean' in col_stats:  # Numeric column
-                            numeric_cols.append(col_name)
-                        else:  # Categorical column
-                            categorical_cols.append(col_name)
+                        count_val = col_stats.get('count', 'N/A')
+                        unique_val = col_stats.get('unique', 'N/A')
+                        top_val = col_stats.get('top', 'N/A')
+                        freq_val = col_stats.get('freq', 'N/A')
+                        min_val = col_stats.get('min', 'N/A')
+                        max_val = col_stats.get('max', 'N/A')
 
-                    html += f"<p><strong>Numerical Columns:</strong> {len(numeric_cols)} ({', '.join(numeric_cols[:5])}{'...' if len(numeric_cols) > 5 else ''})</p>"
-                    html += f"<p><strong>Categorical Columns:</strong> {len(categorical_cols)} ({', '.join(categorical_cols[:5])}{'...' if len(categorical_cols) > 5 else ''})</p>"
+                        # Format numeric values for better readability
+                        if isinstance(count_val, (int, float)) and count_val != 'N/A':
+                            count_val = f"{count_val:,.0f}" if count_val == int(count_val) else f"{count_val:,.2f}"
+                        if isinstance(min_val, (int, float)) and min_val != 'N/A':
+                            min_val = f"{min_val:,.2f}" if abs(min_val) < 1000 else f"{min_val:,.0f}"
+                        if isinstance(max_val, (int, float)) and max_val != 'N/A':
+                            max_val = f"{max_val:,.2f}" if abs(max_val) < 1000 else f"{max_val:,.0f}"
 
-                    # Show key statistics for a few important columns
-                    if numeric_cols:
-                        html += "<p><strong>Key Numerical Statistics:</strong></p><ul>"
-                        for col_name in numeric_cols[:3]:  # Show top 3 numeric columns
-                            col_stats = stats[col_name]
-                            mean_val = col_stats.get('mean', 'N/A')
-                            std_val = col_stats.get('std', 'N/A')
-                            min_val = col_stats.get('min', 'N/A')
-                            max_val = col_stats.get('max', 'N/A')
-                            html += f"<li><code>{col_name}</code>: Mean={mean_val}, Std={std_val}, Range=[{min_val} to {max_val}]</li>"
-                        html += "</ul>"
+                        # Truncate long text values for display
+                        if isinstance(top_val, str) and len(top_val) > 30:
+                            top_val = top_val[:27] + "..."
 
-                    if categorical_cols:
-                        html += "<p><strong>Key Categorical Statistics:</strong></p><ul>"
-                        for col_name in categorical_cols[:3]:  # Show top 3 categorical columns
-                            col_stats = stats[col_name]
-                            unique_count = col_stats.get('unique', 'N/A')
-                            top_val = col_stats.get('top', 'N/A')
-                            freq_val = col_stats.get('freq', 'N/A')
-                            html += f"<li><code>{col_name}</code>: {unique_count} unique values, Most common: '{top_val}' (appears {freq_val} times)</li>"
-                        html += "</ul>"
+                        html += f"<tr>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'><code>{col_name}</code></td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{count_val}</td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{unique_val}</td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{top_val}</td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{freq_val}</td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{min_val}</td>"
+                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{max_val}</td>"
+                        html += f"</tr>"
+
+                    html += "</table>"
+                    html += "</div>"
 
             else:
                 html += f"""

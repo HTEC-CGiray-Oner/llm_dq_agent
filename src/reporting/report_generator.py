@@ -87,7 +87,7 @@ class DataQualityReportGenerator:
                     assessment_results['summary']['error_checks'] += 1
 
             except Exception as e:
-                print(f"❌ Error running {check_name}: {e}")
+                print(f"Error running {check_name}: {e}")
                 assessment_results['check_results'][check_name] = {
                     'status': 'error',
                     'error': str(e)

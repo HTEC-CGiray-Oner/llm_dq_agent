@@ -180,7 +180,8 @@ def check_dataset_descriptive_stats(dataset_id: str, connector_type: Optional[st
 
     This function generates statistical summaries using pandas describe() method for both
     numerical and categorical columns, offering insights into data distribution, central
-    tendencies, variability, and uniqueness.
+    tendencies, variability, and uniqueness. Columns ending with "_id" are automatically
+    cast as categorical for proper statistical treatment.
 
     Args:
         dataset_id (str): Full table identifier for the dataset to analyze. Examples:
@@ -195,15 +196,26 @@ def check_dataset_descriptive_stats(dataset_id: str, connector_type: Optional[st
             - dataset_id: The identifier of the analyzed dataset
             - descriptive_stats: Dictionary with column-wise statistics from df.describe()
             - status: 'success' if analysis completed, 'failure' if errors occurred
+
+    Note:
+        Columns ending with "_id" (e.g., customer_id, product_id) are automatically converted
+        to categorical type before analysis to ensure appropriate statistical treatment.
     """
     try:
         # 1. Load the data based on the ID provided by the LLM
         df = load_data_by_id(dataset_id, connector_type=connector_type)
 
-        # 2. Generate descriptive statistics using pandas describe
+        # 2. Cast columns ending with "_id" to categorical for proper statistical treatment
+        id_columns = [col for col in df.columns if col.lower().endswith('_id')]
+        for col in id_columns:
+            # Convert ID columns to categorical type
+            df[col] = df[col].astype('category')
+            print(f"✓ Converted '{col}' to categorical for descriptive statistics")
+
+        # 3. Generate descriptive statistics using pandas describe
         describe_all = df.describe(include='all')
 
-        # 3. Convert to dictionary format for API response
+        # 4. Convert to dictionary format for API response
         stats_dict = {}
         for col in describe_all.columns:
             col_stats = {}
