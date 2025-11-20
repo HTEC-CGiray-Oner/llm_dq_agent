@@ -70,10 +70,12 @@ def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = No
     df = load_data_by_id(dataset_id, connector_type=connector_type)
 
     # 2. Counting duplicates
-    duplicate_numb = len(df) - len(df.drop_duplicates())
+    total_rows = len(df)
+    duplicate_numb = total_rows - len(df.drop_duplicates())
 
     return {
         "dataset_id": dataset_id,
+        "total_rows": total_rows,
         "duplicate_qty": duplicate_numb,
         "status": "success" if duplicate_numb == 0 else "failure"
     }
@@ -172,8 +174,66 @@ def check_dataset_null_values(dataset_id: str, connector_type: Optional[str] = N
             "status": "failure"
         }
 
+def check_dataset_descriptive_stats(dataset_id: str, connector_type: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Provides comprehensive descriptive statistics for all columns in a dataset.
+
+    This function generates statistical summaries using pandas describe() method for both
+    numerical and categorical columns, offering insights into data distribution, central
+    tendencies, variability, and uniqueness.
+
+    Args:
+        dataset_id (str): Full table identifier for the dataset to analyze. Examples:
+                         - 'SCHEMA.TABLE' for PostgreSQL
+                         - 'DATABASE.SCHEMA.TABLE' for Snowflake
+                         - 'TABLE' for default schema
+        connector_type (str, optional): The data source connector to use ('snowflake', 'postgres').
+                                       If not specified, uses default from settings.yaml
+
+    Returns:
+        Dict[str, Any]: A dictionary containing:
+            - dataset_id: The identifier of the analyzed dataset
+            - descriptive_stats: Dictionary with column-wise statistics from df.describe()
+            - status: 'success' if analysis completed, 'failure' if errors occurred
+    """
+    try:
+        # 1. Load the data based on the ID provided by the LLM
+        df = load_data_by_id(dataset_id, connector_type=connector_type)
+
+        # 2. Generate descriptive statistics using pandas describe
+        describe_all = df.describe(include='all')
+
+        # 3. Convert to dictionary format for API response
+        stats_dict = {}
+        for col in describe_all.columns:
+            col_stats = {}
+            for stat_name in describe_all.index:
+                value = describe_all.loc[stat_name, col]
+                # Handle NaN values and convert numpy types to native Python types
+                if pd.isna(value):
+                    col_stats[stat_name] = None
+                elif isinstance(value, (np.integer, np.floating)):
+                    col_stats[stat_name] = float(value) if isinstance(value, np.floating) else int(value)
+                else:
+                    col_stats[stat_name] = str(value)
+
+            stats_dict[col] = col_stats
+
+        return {
+            "dataset_id": dataset_id,
+            "descriptive_stats": stats_dict,
+            "status": "success"
+        }
+
+    except Exception as e:
+        return {
+            "dataset_id": dataset_id,
+            "error": str(e),
+            "status": "failure"
+        }
+
 # Available data quality check functions
-DQ_TOOLS = [check_dataset_duplicates, check_dataset_null_values]
+DQ_TOOLS = [check_dataset_duplicates, check_dataset_null_values, check_dataset_descriptive_stats]
 
 if __name__ == '__main__':
     # Example execution:
@@ -182,3 +242,6 @@ if __name__ == '__main__':
 
     result2 = check_dataset_null_values("test_data_set")
     print("Null Values Check Result:", result2)
+
+    result3 = check_dataset_descriptive_stats("test_data_set")
+    print("Descriptive Stats Result:", result3)

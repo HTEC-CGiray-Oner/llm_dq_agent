@@ -13,6 +13,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.tools import StructuredTool
 from src.data_quality.checks import DQ_TOOLS
+from src.agent.reporting_tools import REPORTING_TOOLS
 from src.retrieval.schema_indexer import SchemaIndexer
 
 
@@ -42,6 +43,7 @@ def create_smart_dq_agent():
     # Convert all DQ functions to tools supporting multiple connectors
     dq_tools = []
 
+    # Add individual DQ check tools
     for dq_function in DQ_TOOLS:
         # Create wrapper function
         wrapper_func = create_dq_tool_wrapper(dq_function)
@@ -74,6 +76,15 @@ def create_smart_dq_agent():
         )
         dq_tools.append(tool)
 
+    # Add reporting tools directly (they already have proper signatures)
+    for reporting_function in REPORTING_TOOLS:
+        tool = StructuredTool.from_function(
+            func=reporting_function,
+            name=reporting_function.__name__,
+            description=reporting_function.__doc__ or f"Reporting tool: {reporting_function.__name__}"
+        )
+        dq_tools.append(tool)
+
     # Define the enhanced prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system",
@@ -81,13 +92,16 @@ def create_smart_dq_agent():
 
          Your task:
          1. Understand the user's data quality request - pay attention to which data source they mention (Snowflake, PostgreSQL, etc.)
-         2. Identify the TYPE OF DATA QUALITY CHECK requested:
+         2. Identify the TYPE OF REQUEST:
             - For "duplicates", "duplicate rows", "duplicate records" → use check_dataset_duplicates
             - For "null values", "missing data", "nulls", "missing values" → use check_dataset_null_values
+            - For "descriptive stats", "statistics", "data summary" → use check_dataset_descriptive_stats
+            - For "comprehensive report", "full report", "assessment report", "generate report" → use generate_comprehensive_dq_report
+            - For "save report", "export report", "create files" → use save_dq_report_to_file
          3. The system will provide you with RELEVANT TABLES found via semantic search
          4. Each table shows its DATA SOURCE (SNOWFLAKE, POSTGRES, etc.) and Connector Type
          5. Select the most appropriate table from the provided options, MATCHING the data source the user asked about
-         6. Call the appropriate data quality check function with BOTH the table name AND the connector_type parameter
+         6. Call the appropriate function with BOTH the table name AND the connector_type parameter
 
          The RELEVANT TABLES context will show you:
          - Connector Type: The lowercase connector name (snowflake, postgres, etc.)
@@ -109,6 +123,8 @@ def create_smart_dq_agent():
          Examples:
          - check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
          - check_dataset_null_values(dataset_id="public.customers", connector_type="postgres")
+         - generate_comprehensive_dq_report(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake", output_format="summary")
+         - save_dq_report_to_file(dataset_id="public.customers", connector_type="postgres", formats="markdown,html")
          """
         ),
         MessagesPlaceholder(variable_name="chat_history"),
