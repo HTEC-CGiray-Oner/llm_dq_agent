@@ -7,7 +7,7 @@ from .base_connector import BaseConnector
 class PostgresConnector(BaseConnector):
     """Connector for PostgreSQL database."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], verbose: bool = True):
         """
         Initialize PostgreSQL connector.
 
@@ -20,6 +20,7 @@ class PostgresConnector(BaseConnector):
         """
         super().__init__(config)
         self._cursor = None
+        self.verbose = verbose
 
     def connect(self) -> None:
         """Establish connection to PostgreSQL."""
@@ -34,7 +35,8 @@ class PostgresConnector(BaseConnector):
                 password=self.config.get('password')
             )
             self._cursor = self._connection.cursor()
-            print(f"✓ Connected to PostgreSQL: {self.config.get('database')}")
+            if self.verbose:
+                print(f"✓ Connected to PostgreSQL: {self.config.get('database')}")
         except ImportError:
             raise ImportError(
                 "psycopg2-binary is not installed. "
@@ -49,6 +51,7 @@ class PostgresConnector(BaseConnector):
             self._cursor.close()
         if self._connection:
             self._connection.close()
+        if self.verbose:
             print("✓ Disconnected from PostgreSQL")
 
     def load_data(self, dataset_id: str, query: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:

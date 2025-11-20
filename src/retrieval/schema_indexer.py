@@ -10,8 +10,6 @@ from src.connectors.schema_discovery import SchemaDiscovery
 from typing import Optional, List
 import os
 from dotenv import load_dotenv
-
-# Load environment variables
 load_dotenv()
 
 
@@ -128,22 +126,27 @@ class SchemaIndexer:
         # Use config defaults if not specified
         include_sample = include_sample if include_sample is not None else self.default_include_sample
         sample_row_limit = sample_row_limit or self.default_sample_row_limit
-        # Use config defaults if not specified
         database = database or self.default_database
 
-        # Determine which schemas to index
+        # Show initial connection message
+        db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+        print(f" Connecting to {db_name}...")
+
+        # Auto-discover all schemas to index
         if auto_discover_schemas or (auto_discover_schemas is None and self.auto_discover_schemas):
-            # Auto-discover all schemas
             schemas_to_index = self._get_all_schemas(database)
-            print(f"Auto-discovered {len(schemas_to_index)} schemas: {', '.join(schemas_to_index)}")
+            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+            print(f"Auto-discovered {len(schemas_to_index)} schemas on {db_name}: {', '.join(schemas_to_index)}")
         elif schemas or self.default_schemas:
             # Use provided list or config list
             schemas_to_index = schemas or self.default_schemas
-            print(f"Indexing {len(schemas_to_index)} specified schemas: {', '.join(schemas_to_index)}")
+            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+            print(f"Indexing {len(schemas_to_index)} specified schemas on {db_name}: {', '.join(schemas_to_index)}")
         elif schema or self.default_schema:
-            # Single schema
+            # If Single schema index needed
             schemas_to_index = [schema or self.default_schema]
-            print(f"Indexing single schema: {schemas_to_index[0]}")
+            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+            print(f"Indexing single schema on {db_name}: {schemas_to_index[0]}")
         else:
             # No schema specified, will use connection default
             schemas_to_index = [None]
@@ -152,9 +155,7 @@ class SchemaIndexer:
         total_tables = 0
         for i, schema_name in enumerate(schemas_to_index, 1):
             schema_display = schema_name or "(current schema)"
-            print(f"\n{'='*70}")
             print(f"[{i}/{len(schemas_to_index)}] INDEXING SCHEMA: {schema_display}")
-            print(f"{'='*70}")
 
             # Discover all table metadata for this schema
             metadata_docs = self.discovery.discover_all_table_metadata(
@@ -181,14 +182,14 @@ class SchemaIndexer:
                 for doc in metadata_docs
             ]
 
-            # Create ChromaDB client
+            # Create ChromaDB client for vector store
             client = chromadb.PersistentClient(path=SCHEMA_VECTOR_DB_PATH)
 
             # Delete existing collection if recreate=True and first schema
             if recreate and i == 1:
                 try:
                     client.delete_collection(SCHEMA_COLLECTION_NAME)
-                    print(f"✓ Deleted existing collection: {SCHEMA_COLLECTION_NAME}")
+                    print(f" Deleted existing collection: {SCHEMA_COLLECTION_NAME}")
                 except:
                     pass
 
@@ -203,15 +204,12 @@ class SchemaIndexer:
             )
 
             total_tables += len(texts)
-            print(f"✓ Indexed {len(texts)} tables from schema {schema_display}")
+            print(f"Indexed {len(texts)} tables from schema {schema_display}")
 
-        print(f"\n{'='*70}")
-        print(f"✓ SCHEMA INDEX BUILT SUCCESSFULLY")
+        print(f" SCHEMA INDEX BUILT SUCCESSFULLY")
         print(f"  - Collection: {SCHEMA_COLLECTION_NAME}")
         print(f"  - Schemas indexed: {len(schemas_to_index)}")
         print(f"  - Total tables indexed: {total_tables}")
-        print(f"  - Path: {SCHEMA_VECTOR_DB_PATH}")
-        print(f"{'='*70}\n")
 
     def _get_database_mappings(self) -> dict:
         """

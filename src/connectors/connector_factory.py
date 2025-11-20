@@ -21,13 +21,14 @@ class ConnectorFactory:
     }
 
     @classmethod
-    def create_connector(cls, connector_type: str, config: Optional[Dict[str, Any]] = None) -> BaseConnector:
+    def create_connector(cls, connector_type: str, config: Optional[Dict[str, Any]] = None, verbose: bool = True) -> BaseConnector:
         """
         Create a connector instance based on type.
 
         Args:
             connector_type: Type of connector ('snowflake', 'postgres')
             config: Configuration dictionary. If None, loads from settings.yaml and .env
+            verbose: Whether to print connection/disconnection messages
 
         Returns:
             Initialized connector instance
@@ -45,7 +46,7 @@ class ConnectorFactory:
             config = cls._load_config(connector_type)
 
         connector_class = cls._connectors[connector_type]
-        return connector_class(config)
+        return connector_class(config, verbose=verbose)
 
     @classmethod
     def _load_config(cls, connector_type: str) -> Dict[str, Any]:

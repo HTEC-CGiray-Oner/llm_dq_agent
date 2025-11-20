@@ -14,7 +14,7 @@ class SchemaDiscovery:
 
     def __init__(self, connector_type: str = 'snowflake'):
         self.connector_type = connector_type
-        self.connector = ConnectorFactory.create_connector(connector_type)
+        self.connector = ConnectorFactory.create_connector(connector_type, verbose=False)
 
     def discover_snowflake_tables(
         self,
@@ -44,8 +44,6 @@ class SchemaDiscovery:
             if not schema:
                 cursor.execute("SELECT CURRENT_SCHEMA()")
                 schema = cursor.fetchone()[0]
-
-            print(f"Discovering tables in {database}.{schema}...")
 
             # Query information schema for tables
             query = f"""
@@ -77,7 +75,7 @@ class SchemaDiscovery:
                 table_info = dict(zip(columns, row))
                 tables.append(table_info)
 
-            print(f"✓ Found {len(tables)} tables/views")
+            # print(f"✓ Found {len(tables)} tables/views")
             return tables
 
     def discover_postgres_tables(
@@ -469,5 +467,5 @@ class SchemaDiscovery:
                 print(f"    ✗ Error processing {table_name}: {str(e)}")
                 continue
 
-        print(f"✓ Generated {len(metadata_docs)} metadata documents")
+        # print(f"✓ Generated {len(metadata_docs)} metadata documents")
         return metadata_docs

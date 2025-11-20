@@ -1,4 +1,3 @@
-# src/connectors/snowflake_connector.py
 import pandas as pd
 from typing import Dict, Any, Optional
 from .base_connector import BaseConnector
@@ -7,7 +6,7 @@ from .base_connector import BaseConnector
 class SnowflakeConnector(BaseConnector):
     """Connector for Snowflake data warehouse."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], verbose: bool = True):
         """
         Initialize Snowflake connector.
 
@@ -22,6 +21,7 @@ class SnowflakeConnector(BaseConnector):
         """
         super().__init__(config)
         self._cursor = None
+        self.verbose = verbose
 
     def connect(self) -> None:
         """Establish connection to Snowflake."""
@@ -38,7 +38,8 @@ class SnowflakeConnector(BaseConnector):
                 role=self.config.get('role')
             )
             self._cursor = self._connection.cursor()
-            print(f"✓ Connected to Snowflake: {self.config.get('database')}.{self.config.get('schema')}")
+            if self.verbose:
+                print(f"✓ Connected to Snowflake: {self.config.get('database')}.{self.config.get('schema')}")
         except ImportError:
             raise ImportError(
                 "snowflake-connector-python is not installed. "
@@ -53,7 +54,10 @@ class SnowflakeConnector(BaseConnector):
             self._cursor.close()
         if self._connection:
             self._connection.close()
+        if self.verbose:
             print("✓ Disconnected from Snowflake")
+        if self._connection:
+            self._connection.close()
 
     def load_data(self, dataset_id: str, query: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:
         """
