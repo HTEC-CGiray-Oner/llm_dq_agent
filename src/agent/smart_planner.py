@@ -19,7 +19,7 @@ from src.retrieval.schema_indexer import SchemaIndexer
 
 def get_schema_aware_retriever():
     """Initialize schema discovery for finding relevant tables."""
-    return SchemaIndexer()  # No specific connector - search all
+    return SchemaIndexer()
 
 
 def create_dq_tool_wrapper(dq_function):
@@ -52,19 +52,19 @@ def create_smart_dq_agent():
         if 'duplicate' in dq_function.__name__:
             description = """Check for duplicate rows in a database table.
             Args:
-                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for postgres)
                 connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
             """
         elif 'null' in dq_function.__name__:
             description = """Analyze null values and missing data in a database table.
             Args:
-                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for postgres)
                 connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
             """
         else:
             description = f"""Execute data quality check: {dq_function.__name__}
             Args:
-                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for PostgreSQL)
+                dataset_id: Full table name (e.g., 'DATABASE.SCHEMA.TABLE' for Snowflake or 'schema.table' for postgres)
                 connector_type: Database type - 'snowflake' or 'postgres' (REQUIRED - use the connector type from the context)
             """
 
@@ -88,20 +88,28 @@ def create_smart_dq_agent():
     # Define the enhanced prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-         """You are an expert Data Quality Agent with access to multiple database systems (Snowflake, PostgreSQL, etc.).
+         """You are an expert Data Quality Agent with access to multiple database systems (Snowflake, postgres, etc.).
 
          Your task:
-         1. Understand the user's data quality request - pay attention to which data source they mention (Snowflake, PostgreSQL, etc.)
+         1. Understand the user's data quality request - pay attention to which data source they mention (Snowflake, postgres, etc.)
          2. Identify the TYPE OF REQUEST:
             - For "duplicates", "duplicate rows", "duplicate records" → use check_dataset_duplicates
             - For "null values", "missing data", "nulls", "missing values" → use check_dataset_null_values
             - For "descriptive stats", "statistics", "data summary" → use check_dataset_descriptive_stats
+            - For "comprehensive assessment", "full assessment", "all checks" → use run_comprehensive_dq_assessment (RECOMMENDED - most efficient)
             - For "comprehensive report", "full report", "assessment report", "generate report" → use generate_comprehensive_dq_report
             - For "save report", "export report", "create files" → use save_dq_report_to_file
          3. The system will provide you with RELEVANT TABLES found via semantic search
          4. Each table shows its DATA SOURCE (SNOWFLAKE, POSTGRES, etc.) and Connector Type
          5. Select the most appropriate table from the provided options, MATCHING the data source the user asked about
          6. Call the appropriate function with BOTH the table name AND the connector_type parameter
+
+         🚀 OPTIMIZATION WORKFLOW (RECOMMENDED):
+         If the user wants multiple checks or reports, follow this efficient 2-step process:
+         Step 1: Use run_comprehensive_dq_assessment() to execute all DQ checks ONCE
+         Step 2: Use generate_report_from_assessment_results() or save_report_from_assessment_results() with the JSON results
+
+         This prevents duplicate data loading and check execution, significantly improving performance.
 
          The RELEVANT TABLES context will show you:
          - Connector Type: The lowercase connector name (snowflake, postgres, etc.)
@@ -111,7 +119,7 @@ def create_smart_dq_agent():
          - Row counts and metadata
 
          IMPORTANT: Choose the best matching table based on:
-         - DATA SOURCE match: If user says "Snowflake", choose SNOWFLAKE tables. If they say "PostgreSQL" or "Postgres", choose POSTGRES tables.
+         - DATA SOURCE match: If user says "Snowflake", choose SNOWFLAKE tables. If they say "postgres", choose POSTGRES tables.
          - Column names that match the user's intent
          - Table description/purpose
          - Relevance score
@@ -121,10 +129,10 @@ def create_smart_dq_agent():
          - connector_type: The lowercase connector type from "Connector Type" field (e.g., 'snowflake', 'postgres')
 
          Examples:
+         - run_comprehensive_dq_assessment(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
          - check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
          - check_dataset_null_values(dataset_id="public.customers", connector_type="postgres")
-         - generate_comprehensive_dq_report(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake", output_format="summary")
-         - save_dq_report_to_file(dataset_id="public.customers", connector_type="postgres", formats="markdown,html")
+         - generate_report_from_assessment_results(assessment_results_json="...", output_format="markdown")
          """
         ),
         MessagesPlaceholder(variable_name="chat_history"),
@@ -168,20 +176,35 @@ def run_smart_dq_check(query: str, top_k_tables: int = 3):
     print("-" * 70)
 
     schema_indexer = get_schema_aware_retriever()
-    relevant_tables = schema_indexer.search_tables(query, top_k=top_k_tables)
+
+    # First get all potential matches to check best relevance
+    all_matches = schema_indexer.search_tables(query, top_k=10, min_relevance=0.0)
+
+    # Apply relevance threshold filtering
+    MIN_RELEVANCE_THRESHOLD = 0.15  # Reduced from 0.3 to support environment-based detection
+    relevant_tables = schema_indexer.search_tables(query, top_k=top_k_tables, min_relevance=MIN_RELEVANCE_THRESHOLD)
 
     if not relevant_tables:
-        return {
-            "output": "No relevant tables found. Please ensure the schema index is built. "
-                     "Run: python src/retrieval/schema_indexer.py"
-        }
+        # Check if we have any matches at all
+        if all_matches:
+            best_match = all_matches[0]
+            return {
+                "output": f"No tables found with sufficient relevance (minimum {MIN_RELEVANCE_THRESHOLD*100:.0f}% match required). "
+                         f"Best match was '{best_match['full_name']}' with only {best_match['relevance_score']*100:.1f}% relevance. "
+                         f"Please try a more specific table name or check if the table exists in your schema index."
+            }
+        else:
+            return {
+                "output": "No relevant tables found. Please ensure the schema index is built. "
+                         "Run: python src/retrieval/schema_indexer.py"
+            }
 
     # Display discovered tables
-    print(f"\nFound {len(relevant_tables)} relevant table(s):\n")
+    print(f"\nFound {len(relevant_tables)} relevant table(s) (≥{MIN_RELEVANCE_THRESHOLD*100:.0f}% relevance):\n")
     for table in relevant_tables:
         connector = table['connector_type'].upper()
         print(f"  {table['rank']}. [{connector}] {table['full_name']}")
-        print(f"     Relevance: {table['relevance_score']:.2%}")
+        print(f"     Relevance: {table['relevance_score']:.2%} ✓")
         print()
 
     # Step 2: Build context for agent

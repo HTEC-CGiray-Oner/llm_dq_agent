@@ -28,6 +28,8 @@ class ConnectorFactory:
         Args:
             connector_type: Type of connector ('snowflake', 'postgres')
             config: Configuration dictionary. If None, loads from settings.yaml and .env
+                   Note: Most users should rely on settings.yaml + .env configuration.
+                   Only pass config for edge cases like testing, multi-tenant apps, or runtime overrides.
             verbose: Whether to print connection/disconnection messages
 
         Returns:

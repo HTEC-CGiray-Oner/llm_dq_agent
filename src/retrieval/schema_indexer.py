@@ -30,33 +30,64 @@ class SchemaIndexer:
         """Load database and schema from settings.yaml"""
         import yaml
         settings_path = os.path.join(os.path.dirname(__file__), '../../config/settings.yaml')
-        self.default_database = None
-        self.default_schema = None
-        self.default_schemas = None
-        self.auto_discover_schemas = False
-        self.exclude_schemas = []
-        self.default_include_sample = False
-        self.default_sample_row_limit = 3
 
+        # Define default configuration values
+        defaults = {
+            'default_database': None,
+            'default_schemas': None,
+            'auto_discover_schemas': False,
+            'exclude_schemas': [],
+            'default_include_sample': False,
+            'default_sample_row_limit': 3
+        }
+
+        # Set defaults first from above dict
+        for key, default_value in defaults.items():
+            setattr(self, key, default_value)
+
+        # Override defaults with settings.yaml if file exists
         if os.path.exists(settings_path):
-            with open(settings_path, 'r') as f:
-                settings = yaml.safe_load(f)
-                connector_config = settings.get('connectors', {}).get(self.connector_type, {})
-                discovery_config = connector_config.get('discovery', {}) if connector_config else {}
+            try:
+                with open(settings_path, 'r') as f:
+                    settings = yaml.safe_load(f)
+                    connector_config = settings.get('connectors', {}).get(self.connector_type, {})
+                    discovery_config = connector_config.get('discovery', {})
 
-                # Get discovery settings with safe defaults
-                self.default_database = discovery_config.get('database') if discovery_config else None
-                self.default_schema = discovery_config.get('schema') if discovery_config else None
-                self.default_schemas = discovery_config.get('schemas') if discovery_config else None
-                self.auto_discover_schemas = discovery_config.get('auto_discover_schemas', False) if discovery_config else False
-                self.exclude_schemas = discovery_config.get('exclude_schemas', []) if discovery_config else []
-                self.default_include_sample = discovery_config.get('include_sample', False) if discovery_config else False
-                self.default_sample_row_limit = discovery_config.get('sample_row_limit', 3) if discovery_config else 3
+                    # Map config keys to class attributes
+                    config_mapping = {
+                        'database': 'default_database',
+                        'schemas': 'default_schemas',
+                        'auto_discover_schemas': 'auto_discover_schemas',
+                        'exclude_schemas': 'exclude_schemas',
+                        'include_sample': 'default_include_sample',
+                        'sample_row_limit': 'default_sample_row_limit'
+                    }
+
+                    # Apply configuration values if they exist
+                    for config_key, attr_name in config_mapping.items():
+                        if config_key in discovery_config:
+                            setattr(self, attr_name, discovery_config[config_key])
+
+            except Exception as e:
+                print(f"Warning: Could not load settings.yaml: {e}. Using defaults.")
+
+    def _get_db_display_name(self) -> str:
+        """Get user-friendly display name for the current connector type."""
+        display_names = {
+            'snowflake': 'Snowflake',
+            'postgres': 'postgres',
+            'postgresql': 'postgres',
+            'mysql': 'MySQL',
+            'oracle': 'Oracle',
+            'sqlite': 'SQLite'
+        }
+        return display_names.get(self.connector_type, self.connector_type.title())
 
     def _get_all_schemas(self, database: Optional[str] = None) -> List[str]:
         """Discover all schemas from INFORMATION_SCHEMA."""
         from src.connectors.connector_factory import ConnectorFactory
 
+        # Create connector instance for specified database connector type
         connector = ConnectorFactory.create_connector(self.connector_type)
 
         with connector:
@@ -64,7 +95,7 @@ class SchemaIndexer:
 
             if self.connector_type == 'snowflake':
                 # Snowflake schema discovery
-                # Get current database if not specified
+                # Use connection's database if no database specified in settings.yaml
                 if database is None or database == '':
                     cursor.execute("SELECT CURRENT_DATABASE()")
                     database = cursor.fetchone()[0]
@@ -79,7 +110,12 @@ class SchemaIndexer:
                 schemas = [row[0] for row in cursor.fetchall()]
 
             elif self.connector_type == 'postgres':
-                # PostgreSQL schema discovery
+                # postgres schema discovery
+                # Get current database if not specified (similar to Snowflake approach)
+                if database is None or database == '':
+                    cursor.execute("SELECT current_database()")
+                    database = cursor.fetchone()[0]
+
                 query = """
                 SELECT schema_name
                 FROM information_schema.schemata
@@ -102,7 +138,6 @@ class SchemaIndexer:
     def build_schema_index(
         self,
         database: Optional[str] = None,
-        schema: Optional[str] = None,
         schemas: Optional[List[str]] = None,
         auto_discover_schemas: Optional[bool] = None,
         include_sample: Optional[bool] = None,
@@ -115,8 +150,7 @@ class SchemaIndexer:
 
         Args:
             database: Database to scan (None = use config or current database)
-            schema: Single schema to scan (None = use config)
-            schemas: List of specific schemas to scan
+            schemas: List of specific schemas to scan (single schema can be passed as ['schema_name'])
             auto_discover_schemas: If True, automatically discover and index ALL schemas
             include_sample: Include sample data (None = use config, default: from settings.yaml)
             sample_row_limit: Number of sample rows per table (None = use config)
@@ -128,25 +162,20 @@ class SchemaIndexer:
         sample_row_limit = sample_row_limit or self.default_sample_row_limit
         database = database or self.default_database
 
-        # Show initial connection message
-        db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+        db_name = self._get_db_display_name()
         print(f" Connecting to {db_name}...")
 
         # Auto-discover all schemas to index
         if auto_discover_schemas or (auto_discover_schemas is None and self.auto_discover_schemas):
             schemas_to_index = self._get_all_schemas(database)
-            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
+            db_name = self._get_db_display_name()
             print(f"Auto-discovered {len(schemas_to_index)} schemas on {db_name}: {', '.join(schemas_to_index)}")
         elif schemas or self.default_schemas:
             # Use provided list or config list
             schemas_to_index = schemas or self.default_schemas
-            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
-            print(f"Indexing {len(schemas_to_index)} specified schemas on {db_name}: {', '.join(schemas_to_index)}")
-        elif schema or self.default_schema:
-            # If Single schema index needed
-            schemas_to_index = [schema or self.default_schema]
-            db_name = "Snowflake" if self.connector_type == 'snowflake' else "PostgreSQL"
-            print(f"Indexing single schema on {db_name}: {schemas_to_index[0]}")
+            db_name = self._get_db_display_name()
+            schema_word = "schema" if len(schemas_to_index) == 1 else "schemas"
+            print(f"Indexing {len(schemas_to_index)} specified {schema_word} on {db_name}: {', '.join(schemas_to_index)}")
         else:
             # No schema specified, will use connection default
             schemas_to_index = [None]
@@ -213,15 +242,58 @@ class SchemaIndexer:
 
     def _get_database_mappings(self) -> dict:
         """
-        Build dynamic database name to connector type mapping from indexed metadata.
-        This learns the mapping automatically instead of hardcoding.
+        Build intelligent database name to connector type mapping from indexed metadata
+        and configuration. Maps environment keywords (staging/prod) to appropriate connectors.
 
         Returns:
-            Dict mapping database names to connector types
+            Dict mapping database names and environment keywords to connector types
         """
         mappings = {}
 
-        # Connect to vector store
+        # First, build mappings from configuration (environment-based)
+        try:
+            import yaml
+            settings_path = os.path.join(os.path.dirname(__file__), '../../config/settings.yaml')
+
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = yaml.safe_load(f)
+
+                connectors = settings.get('connectors', {})
+                for connector_type, config in connectors.items():
+                    discovery = config.get('discovery', {})
+                    database = discovery.get('database', '')
+
+                    if database:
+                        # Map exact database name
+                        mappings[database.lower()] = connector_type
+
+                        # Map environment keywords based on database naming patterns
+                        db_lower = database.lower()
+                        if any(keyword in db_lower for keyword in ['stage', 'staging', 'dev', 'test']):
+                            # Staging environment mappings
+                            mappings['stage'] = connector_type
+                            mappings['staging'] = connector_type
+                            mappings['dev'] = connector_type
+                            mappings['development'] = connector_type
+                            mappings['test'] = connector_type
+
+                        elif any(keyword in db_lower for keyword in ['prod', 'production', 'live']):
+                            # Production environment mappings
+                            mappings['prod'] = connector_type
+                            mappings['production'] = connector_type
+                            mappings['live'] = connector_type
+
+                        # Map individual words from database name
+                        db_words = db_lower.replace('_', ' ').split()
+                        for word in db_words:
+                            if len(word) >= 3:  # Avoid very short words
+                                mappings[word] = connector_type
+
+        except Exception as e:
+            print(f"Warning: Could not load configuration for mappings: {e}")
+
+        # Then, enhance with dynamic mappings from indexed metadata
         client = chromadb.PersistentClient(path=SCHEMA_VECTOR_DB_PATH)
 
         try:
@@ -237,7 +309,7 @@ class SchemaIndexer:
 
                     # Extract database name from full table path
                     if connector_type and full_name:
-                        # For PostgreSQL: database.schema.table -> database = database name
+                        # For postgres: database.schema.table -> database = database name
                         # For Snowflake: DATABASE.SCHEMA.TABLE -> DATABASE = database name
                         parts = full_name.split('.')
                         if len(parts) >= 2:
@@ -252,17 +324,18 @@ class SchemaIndexer:
                                     mappings[word] = connector_type
 
         except Exception as e:
-            print(f"Warning: Could not build database mappings: {e}")
+            print(f"Warning: Could not build dynamic mappings: {e}")
 
         return mappings
 
-    def search_tables(self, query: str, top_k: int = 3) -> List[dict]:
+    def search_tables(self, query: str, top_k: int = 3, min_relevance: float = 0.15) -> List[dict]:
         """
         Search for relevant tables based on a natural language query with intelligent database matching.
 
         Args:
             query: User's natural language query
             top_k: Number of relevant tables to return
+            min_relevance: Minimum relevance score threshold (0.0-1.0)
 
         Returns:
             List of dicts with table info and relevance scores
@@ -270,29 +343,50 @@ class SchemaIndexer:
         # Get dynamic database mappings from indexed metadata
         database_mappings = self._get_database_mappings()
 
-        # Detect database preference from query
+        # Detect database preference from query with enhanced environment detection
         preferred_connector = None
         query_lower = query.lower()
 
-        # Check for explicit database mentions first
+        # Check for explicit database type mentions first
         if any(db in query_lower for db in ['postgres', 'postgresql']):
             preferred_connector = 'postgres'
         elif any(db in query_lower for db in ['snowflake']):
             preferred_connector = 'snowflake'
         else:
-            # Check for database names/words from actual indexed databases
+            # Check for environment keywords and database names from config and indexed data
             query_words = query_lower.replace('_', ' ').split()
+
+            # Check each word for database mappings
             for word in query_words:
                 if word in database_mappings:
                     preferred_connector = database_mappings[word]
                     break
 
-            # Also check for partial matches in the full query
+            # Also check for partial matches in the full query string
             if not preferred_connector:
                 for db_name, connector in database_mappings.items():
                     if db_name in query_lower:
                         preferred_connector = connector
                         break
+
+            # Additional environment-based detection (fallback)
+            if not preferred_connector:
+                staging_keywords = ['stage', 'staging', 'dev', 'development', 'test']
+                production_keywords = ['prod', 'production', 'live']
+
+                if any(keyword in query_lower for keyword in staging_keywords):
+                    # Look for staging connector in mappings
+                    for keyword in staging_keywords:
+                        if keyword in database_mappings:
+                            preferred_connector = database_mappings[keyword]
+                            break
+
+                elif any(keyword in query_lower for keyword in production_keywords):
+                    # Look for production connector in mappings
+                    for keyword in production_keywords:
+                        if keyword in database_mappings:
+                            preferred_connector = database_mappings[keyword]
+                            break
 
         # Connect to vector store
         client = chromadb.PersistentClient(path=SCHEMA_VECTOR_DB_PATH)
@@ -325,7 +419,7 @@ class SchemaIndexer:
 
                 # Apply database preference boost
                 if preferred_connector and metadata['connector_type'] == preferred_connector:
-                    boosted_relevance = min(base_relevance + 0.3, 1.0)  # Cap at 1.0
+                    boosted_relevance = min(base_relevance + 0.3, 1.0)  # Max available value 1.0
 
                 # Apply table name matching boost
                 table_name = metadata.get('table_name', '').lower()
@@ -352,54 +446,30 @@ class SchemaIndexer:
                     'table_boost': table_name_boost,
                     'detected_db': preferred_connector,  # Show what database was detected
                     'db_mappings_used': database_mappings if preferred_connector else None
-                })        # Re-sort by boosted relevance and take top_k
+                })        # Re-sort by boosted relevance and take top_k in our case top 3
         relevant_tables.sort(key=lambda x: x['relevance_score'], reverse=True)
-        final_results = relevant_tables[:top_k]
 
-        # Update ranks after re-sorting
+        # Apply relevance threshold filtering
+        filtered_tables = [
+            table for table in relevant_tables
+            if table['relevance_score'] >= min_relevance
+        ]
+
+        final_results = filtered_tables[:top_k]
+
+        # Update ranks after re-sorting and filtering
         for i, table in enumerate(final_results):
             table['rank'] = i + 1
 
         return final_results
 
 
-def build_schema_index_for_snowflake(
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
-    include_sample: Optional[bool] = None,
-    sample_row_limit: Optional[int] = None,
-    max_tables: Optional[int] = None
-):
-    """
-    Convenience function to build schema index for Snowflake.
-
-    Usage:
-        from src.retrieval.schema_indexer import build_schema_index_for_snowflake
-
-        # Use config defaults (sample data enabled by default)
-        build_schema_index_for_snowflake()
-
-        # Override to disable samples
-        build_schema_index_for_snowflake(include_sample=False)
-
-        # Change sample size
-        build_schema_index_for_snowflake(sample_row_limit=5)
-    """
-    indexer = SchemaIndexer('snowflake')
-    indexer.build_schema_index(
-        database=database,
-        schema=schema,
-        include_sample=include_sample,
-        sample_row_limit=sample_row_limit,
-        max_tables=max_tables
-    )
-
-
 if __name__ == "__main__":
     # Build schema index when run directly
     print("Building schema index for Snowflake...")
     print("Using database and schema from settings.yaml (or current connection defaults)")
-    build_schema_index_for_snowflake(
+    indexer = SchemaIndexer('snowflake')
+    indexer.build_schema_index(
         # Uses config defaults (include_sample and sample_row_limit from settings.yaml)
         max_tables=None  # None = all tables
     )

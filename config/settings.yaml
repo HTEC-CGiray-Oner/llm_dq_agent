@@ -1,11 +1,11 @@
 # Data Quality Agent Configuration
-default_connector: snowflake
+# default_connector: snowflake # Optional: specify a default connector type
 
 connectors:
   snowflake:
     # Schema discovery settings (for automatic table indexing)
     discovery:
-      database: null
+      database: PROD_SALES
       schema: null
       auto_discover_schemas: true
       exclude_schemas: []
@@ -14,7 +14,7 @@ connectors:
 
   postgres:
     discovery:
-      database: null
+      database: stage_sales
       schema: null
       auto_discover_schemas: true
       exclude_schemas: [pg_catalog, pg_toast, information_schema]

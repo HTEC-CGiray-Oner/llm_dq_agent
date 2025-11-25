@@ -5,32 +5,117 @@ import yaml
 import os
 from src.connectors.connector_factory import ConnectorFactory
 
-# Load default connector from settings
+# Smart connector detection from settings
 def get_default_connector_type() -> str:
-    """Get the default connector type from settings.yaml"""
+    """
+    Intelligently determine connector type from settings.yaml configuration.
+
+    Priority:
+    1. Explicit default_connector (if set and valid)
+    2. First available connector in connectors section
+    3. Fallback to 'snowflake'
+    """
     settings_path = os.path.join(os.path.dirname(__file__), '../../config/settings.yaml')
     if os.path.exists(settings_path):
         with open(settings_path, 'r') as f:
             settings = yaml.safe_load(f)
-            return settings.get('default_connector', 'snowflake')
+
+            # Check if explicit default is set and valid
+            explicit_default = settings.get('default_connector', '').strip()
+            if explicit_default and 'connectors' in settings:
+                if explicit_default in settings['connectors']:
+                    return explicit_default
+
+            # Auto-detect from available connectors
+            if 'connectors' in settings and settings['connectors']:
+                available_connectors = [k for k, v in settings['connectors'].items() if v]
+                if available_connectors:
+                    auto_detected = available_connectors[0]
+                    print(f"🤖 Auto-detected connector: {auto_detected} (from {len(available_connectors)} available)")
+                    return auto_detected
+
+            # Fallback to explicit default even if not in connectors
+            if explicit_default:
+                return explicit_default
+
+    return 'snowflake'
+
+def smart_connector_detection(dataset_id: str) -> str:
+    """
+    Intelligently detect connector type based on dataset_id pattern and available configs.
+
+    Detection logic:
+    1. Table name patterns (uppercase = Snowflake, lowercase = postgres)
+    2. Database name mapping from settings
+    3. Available connector configs
+    4. Fallback to auto-detected default
+
+    Args:
+        dataset_id: Table identifier (e.g., 'PROD_SALES.PUBLIC.CUSTOMERS', 'stage_sales.public.customers')
+
+    Returns:
+        str: Detected connector type
+    """
+    settings_path = os.path.join(os.path.dirname(__file__), '../../config/settings.yaml')
+    available_connectors = []
+
+    # Load available connectors
+    if os.path.exists(settings_path):
+        with open(settings_path, 'r') as f:
+            settings = yaml.safe_load(f)
+            if 'connectors' in settings and settings['connectors']:
+                available_connectors = [k for k, v in settings['connectors'].items() if v]
+
+    # Pattern-based detection
+    if '.' in dataset_id:
+        parts = dataset_id.split('.')
+        database_part = parts[0]
+
+        # Uppercase database names typically indicate Snowflake
+        if database_part.isupper() and 'snowflake' in available_connectors:
+            print(f"Detected Snowflake pattern: {database_part} (uppercase)")
+            return 'snowflake'
+
+        # Lowercase database names typically indicate postgres
+        if database_part.islower() and 'postgres' in available_connectors:
+            print(f"Detected postgres pattern: {database_part} (lowercase)")
+            return 'postgres'
+
+        # Database name-based detection
+        db_lower = database_part.lower()
+        if 'prod' in db_lower or 'sales' in db_lower:
+            if 'snowflake' in available_connectors:
+                print(f"Detected Snowflake from database name: {database_part}")
+                return 'snowflake'
+        if 'stage' in db_lower or 'dev' in db_lower:
+            if 'postgres' in available_connectors:
+                print(f"Detected postgres from database name: {database_part}")
+                return 'postgres'
+
+    # Fallback to first available connector
+    if available_connectors:
+        fallback = available_connectors[0]
+        print(f"🤖 Using fallback connector: {fallback}")
+        return fallback
+
     return 'snowflake'
 
 def load_data_by_id(dataset_id: str, connector_type: Optional[str] = None, **kwargs) -> pd.DataFrame:
     """
-    Loads data based on dataset ID using the specified connector.
+    Loads data based on dataset ID with intelligent connector auto-detection.
 
     Args:
         dataset_id: The identifier for the dataset (table name, file name, etc.)
         connector_type: Type of connector to use ('snowflake', 'postgres').
-                       If None, uses default from settings.yaml
+                       If None, uses smart auto-detection based on table patterns and available configs
         **kwargs: Additional parameters passed to the connector's load_data method
 
     Returns:
         DataFrame containing the loaded data
     """
-    # Use default connector if not specified
+    # Use smart connector detection if not specified
     if connector_type is None:
-        connector_type = get_default_connector_type()
+        connector_type = smart_connector_detection(dataset_id)
 
     print(f"--- Loading data for: {dataset_id} using {connector_type.upper()} connector ---")
 
@@ -45,10 +130,9 @@ def load_data_by_id(dataset_id: str, connector_type: Optional[str] = None, **kwa
 
     except Exception as e:
         print(f"Error loading data: {str(e)}")
-        # Fallback to dummy data for development/testing
-        print("Falling back to dummy data...")
-        data = {'A': [1, 2, 2, 2, 3], 'B': ['a', 'b', 'b', 'b', 'c']}
-        return pd.DataFrame(data)
+        # Return empty DataFrame to avoid masking real connectivity/data issues
+        print("Returning empty DataFrame due to connection/data loading failure...")
+        return pd.DataFrame()
 
 def check_dataset_duplicates(dataset_id: str, connector_type: Optional[str] = None) -> Dict[str, Any]:
     """

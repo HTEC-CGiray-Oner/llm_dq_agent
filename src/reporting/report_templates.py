@@ -133,7 +133,7 @@ class ReportTemplates:
 
         # Recommendations
         if recommendations:
-            markdown += "---\n\n## 🎯 Recommendations\n\n"
+            markdown += "---\n\n## Recommendations\n\n"
             for i, recommendation in enumerate(recommendations, 1):
                 markdown += f"{i}. **{recommendation['title']}**\n"
                 markdown += f"   - {recommendation['description']}\n"
@@ -228,7 +228,7 @@ class ReportTemplates:
         <tr><td>Total Checks</td><td>{metadata['total_checks']}</td></tr>
     </table>
 
-    <h2>🔍 Detailed Check Results</h2>
+    <h2>Detailed Check Results</h2>
 """
 
         # Individual check results
@@ -378,7 +378,7 @@ class ReportTemplates:
         if recommendations:
             html += """
     <div class="recommendations">
-        <h2>🎯 Recommendations</h2>
+        <h2>Recommendations</h2>
 """
             for i, recommendation in enumerate(recommendations, 1):
                 priority_class = f"priority-{recommendation['priority'].lower()}"

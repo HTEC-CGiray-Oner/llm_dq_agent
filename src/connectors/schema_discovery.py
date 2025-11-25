@@ -75,7 +75,6 @@ class SchemaDiscovery:
                 table_info = dict(zip(columns, row))
                 tables.append(table_info)
 
-            # print(f"✓ Found {len(tables)} tables/views")
             return tables
 
     def discover_postgres_tables(
@@ -467,5 +466,4 @@ class SchemaDiscovery:
                 print(f"    ✗ Error processing {table_name}: {str(e)}")
                 continue
 
-        # print(f"✓ Generated {len(metadata_docs)} metadata documents")
         return metadata_docs
