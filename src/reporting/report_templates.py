@@ -88,42 +88,43 @@ class ReportTemplates:
                         markdown += f"- **Quality**: Excellent - No missing values detected in any column\n"
 
                 elif check_name == 'descriptive_stats':
-                    markdown += f"- **Status**: PASS (Statistics Generated)\n"
+                    columns_count = result.get('columns_analyzed', len(result.get('descriptive_stats', {})))
+                    markdown += f"- **Status**: PASS (Statistics Generated)\\n"
+                    markdown += f"- **Columns Analyzed**: {columns_count} columns\\n"
+
+                    # Include detailed statistical table if available
                     stats = result.get('descriptive_stats', {})
-                    markdown += f"- **Columns Analyzed**: {len(stats)} columns\n"
+                    if stats and len(stats) > 0:
+                        markdown += f"\\n**📊 Complete Statistical Summary:**\\n\\n"
+                        markdown += "| Column | Count | Mean | Std | Min | 25% | 50% | 75% | Max | Unique | Top | Freq |\\n"
+                        markdown += "|--------|-------|------|-----|-----|-----|-----|-----|-----|--------|-----|------|\\n"
 
-                    # Categorize columns by type
-                    numeric_cols = []
-                    categorical_cols = []
+                        for col_name, col_stats in stats.items():
+                            if isinstance(col_stats, dict):
+                                # Extract and format values
+                                def fmt_val(val):
+                                    if val is None:
+                                        return '-'
+                                    try:
+                                        if isinstance(val, (int, float)):
+                                            return f"{val:,.2f}" if isinstance(val, float) else f"{val:,}"
+                                        return str(val)[:15]  # Truncate long strings
+                                    except:
+                                        return str(val)[:15]
 
-                    for col_name, col_stats in stats.items():
-                        if 'mean' in col_stats:  # Numeric column
-                            numeric_cols.append(col_name)
-                        else:  # Categorical column
-                            categorical_cols.append(col_name)
+                                count = fmt_val(col_stats.get('count'))
+                                mean = fmt_val(col_stats.get('mean'))
+                                std = fmt_val(col_stats.get('std'))
+                                min_val = fmt_val(col_stats.get('min'))
+                                q25 = fmt_val(col_stats.get('25%'))
+                                q50 = fmt_val(col_stats.get('50%'))
+                                q75 = fmt_val(col_stats.get('75%'))
+                                max_val = fmt_val(col_stats.get('max'))
+                                unique = fmt_val(col_stats.get('unique'))
+                                top = fmt_val(col_stats.get('top'))
+                                freq = fmt_val(col_stats.get('freq'))
 
-                    markdown += f"- **Numerical Columns**: {len(numeric_cols)} ({', '.join(numeric_cols[:5])}{'...' if len(numeric_cols) > 5 else ''})\n"
-                    markdown += f"- **Categorical Columns**: {len(categorical_cols)} ({', '.join(categorical_cols[:5])}{'...' if len(categorical_cols) > 5 else ''})\n"
-
-                    # Show key statistics for a few important columns
-                    if numeric_cols:
-                        markdown += f"\n**Key Numerical Statistics:**\n"
-                        for col_name in numeric_cols[:3]:  # Show top 3 numeric columns
-                            col_stats = stats[col_name]
-                            mean_val = col_stats.get('mean', 'N/A')
-                            std_val = col_stats.get('std', 'N/A')
-                            min_val = col_stats.get('min', 'N/A')
-                            max_val = col_stats.get('max', 'N/A')
-                            markdown += f"- `{col_name}`: Mean={mean_val}, Std={std_val}, Range=[{min_val} to {max_val}]\n"
-
-                    if categorical_cols:
-                        markdown += f"\n**Key Categorical Statistics:**\n"
-                        for col_name in categorical_cols[:3]:  # Show top 3 categorical columns
-                            col_stats = stats[col_name]
-                            unique_count = col_stats.get('unique', 'N/A')
-                            top_val = col_stats.get('top', 'N/A')
-                            freq_val = col_stats.get('freq', 'N/A')
-                            markdown += f"- `{col_name}`: {unique_count} unique values, Most common: '{top_val}' (appears {freq_val} times)\n"
+                                markdown += f"| `{col_name}` | {count} | {mean} | {std} | {min_val} | {q25} | {q50} | {q75} | {max_val} | {unique} | {top} | {freq} |\\n"
 
             else:
                 markdown += f"- **Status**: ERROR\n"
@@ -313,58 +314,66 @@ class ReportTemplates:
                         html += "<p><strong>Quality:</strong> <span style='color: green;'>Excellent - No missing values detected in any column</span></p>"
 
                 elif check_name == 'descriptive_stats':
-                    stats = result.get('descriptive_stats', {})
+                    columns_count = result.get('columns_analyzed', len(result.get('descriptive_stats', {})))
                     html += f"""
         <p><strong>Status:</strong> <span class="status-pass">PASS (Statistics Generated)</span></p>
-        <p><strong>Columns Analyzed:</strong> {len(stats)} columns</p>
+        <p><strong>Columns Analyzed:</strong> {columns_count} columns</p>
 """
 
-                    # Show key statistics for all columns (without classification)
-                    html += "<p><strong>Column Statistics (Count, Unique, Top, Freq, Min, Max):</strong></p>"
-                    html += "<div style='max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;'>"
-                    html += "<table style='width: 100%; border-collapse: collapse;'>"
-                    html += "<tr style='background: #f8f9fa; font-weight: bold;'>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Column</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Count</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Unique</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Top</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Freq</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Min</th>"
-                    html += "<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Max</th>"
-                    html += "</tr>"
+                    # Include detailed statistical table if available
+                    stats = result.get('descriptive_stats', {})
+                    if stats and len(stats) > 0:
+                        html += """
+        <p><strong>📊 Complete Statistical Summary:</strong></p>
+        <div style='overflow-x: auto; margin: 10px 0;'>
+        <table style='width: 100%; border-collapse: collapse; font-size: 0.9em;'>
+        <tr style='background: #667eea; color: white; font-weight: bold;'>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Column</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Count</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Mean</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Std</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Min</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>25%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>50%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>75%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Max</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Unique</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Top</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Freq</th>
+        </tr>"""
 
-                    for col_name, col_stats in stats.items():
-                        count_val = col_stats.get('count', 'N/A')
-                        unique_val = col_stats.get('unique', 'N/A')
-                        top_val = col_stats.get('top', 'N/A')
-                        freq_val = col_stats.get('freq', 'N/A')
-                        min_val = col_stats.get('min', 'N/A')
-                        max_val = col_stats.get('max', 'N/A')
+                        for col_name, col_stats in stats.items():
+                            if isinstance(col_stats, dict):
+                                # Format helper
+                                def fmt_val(val):
+                                    if val is None:
+                                        return '-'
+                                    try:
+                                        if isinstance(val, (int, float)):
+                                            return f"{val:,.2f}" if isinstance(val, float) else f"{val:,}"
+                                        return str(val)[:15]
+                                    except:
+                                        return str(val)[:15]
 
-                        # Format numeric values for better readability
-                        if isinstance(count_val, (int, float)) and count_val != 'N/A':
-                            count_val = f"{count_val:,.0f}" if count_val == int(count_val) else f"{count_val:,.2f}"
-                        if isinstance(min_val, (int, float)) and min_val != 'N/A':
-                            min_val = f"{min_val:,.2f}" if abs(min_val) < 1000 else f"{min_val:,.0f}"
-                        if isinstance(max_val, (int, float)) and max_val != 'N/A':
-                            max_val = f"{max_val:,.2f}" if abs(max_val) < 1000 else f"{max_val:,.0f}"
+                                html += f"""
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>{col_name}</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('count'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('mean'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('std'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('min'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('25%'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('50%'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('75%'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('max'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('unique'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>{fmt_val(col_stats.get('top'))}</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>{fmt_val(col_stats.get('freq'))}</td>
+        </tr>"""
 
-                        # Truncate long text values for display
-                        if isinstance(top_val, str) and len(top_val) > 30:
-                            top_val = top_val[:27] + "..."
-
-                        html += f"<tr>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'><code>{col_name}</code></td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{count_val}</td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{unique_val}</td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{top_val}</td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{freq_val}</td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{min_val}</td>"
-                        html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{max_val}</td>"
-                        html += f"</tr>"
-
-                    html += "</table>"
-                    html += "</div>"
+                        html += """
+        </table>
+        </div>"""
 
             else:
                 html += f"""

@@ -328,7 +328,7 @@ class SchemaIndexer:
 
         return mappings
 
-    def search_tables(self, query: str, top_k: int = 3, min_relevance: float = 0.15) -> List[dict]:
+    def search_tables(self, query: str, top_k: int = 3, min_relevance: float = 0.05) -> List[dict]:
         """
         Search for relevant tables based on a natural language query with intelligent database matching.
 

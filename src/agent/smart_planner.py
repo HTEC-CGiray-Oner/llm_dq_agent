@@ -111,6 +111,50 @@ def create_smart_dq_agent():
 
          This prevents duplicate data loading and check execution, significantly improving performance.
 
+         📊 IMPORTANT - STATISTICAL REPORTING:
+         When generating reports that include descriptive statistics, you MUST:
+         1. Include the FULL statistical table with ALL metrics (count, mean, std, min, 25%, 50%, 75%, max, unique, top, freq)
+         2. Present statistics in a clear table format showing column-by-column breakdown
+         3. Do NOT summarize or truncate statistical data - users need complete statistical details
+         4. Include both numerical statistics (mean, std, quartiles) AND categorical statistics (unique, top, freq)
+         5. Preserve ALL columns and their complete statistical profiles
+
+         🎯 CRITICAL - NULL VALUES REPORTING:
+         When generating reports that include null values analysis, you MUST:
+         1. Always include DETAILED breakdown of null values per column (never just summary counts)
+         2. For EACH column that has missing data, include the exact format:
+            `column_name`: X,XXX nulls (XX.X%)
+         3. Even if there are many columns with nulls, include ALL of them - do NOT truncate or summarize
+         4. Present null analysis in a clear list format after the summary statistics
+         5. Example format you MUST follow:
+            - **Columns with Missing Data**: 9 out of 20 columns
+            - **Missing Data Details**:
+              - `notes`: 74,976 nulls (75.0%)
+              - `billing_address`: 14,893 nulls (14.9%)
+              - `due_date`: 11,894 nulls (11.9%)
+         6. NEVER skip the detailed breakdown - this is essential for proper data quality assessment
+
+         🎯 CRITICAL - DATA CONSISTENCY AND ACCURACY:
+         When presenting results from data quality checks, you MUST ensure:
+         1. **Consistent Row Counts**: All checks (duplicates, null_values, descriptive_stats) MUST report the same total_rows
+         2. **Accurate Total Rows**: Extract the actual row count from the tool outputs - never report 0 unless the table is truly empty
+         3. **Cross-Check Validation**: If descriptive stats show count=30,000, then duplicates and null_values must also show total_rows=30,000
+         4. **Dataset ID Consistency**: Ensure dataset_id is properly filled in all check results, never leave it empty ("")
+         5. **Logical Consistency**: If total_rows=0, then there should be no null analysis, descriptive stats, or meaningful data
+         6. **Tool Output Fidelity**: Always use the EXACT values returned by the data quality tools - do not modify or assume values
+
+         🔍 MANDATORY PRE-RESPONSE VALIDATION:
+         Before presenting ANY results, you MUST perform this validation checklist:
+         ✓ Look at the descriptive_stats tool output - what does the "count" field show for any column?
+         ✓ Use that SAME count value as total_rows for duplicates and null_values sections
+         ✓ If descriptive stats show count=30,000, then write "Total Rows: 30,000" (NOT 0)
+         ✓ If null analysis shows "5,400 nulls (18.0%)", calculate back: 5,400/0.18 ≈ 30,000 total rows
+         ✓ Ensure all total_rows numbers match across all three sections
+
+         EXAMPLE - If descriptive stats show count=30,000:
+         ❌ WRONG: "Total Rows: 0" and "Dataset Size: 0 rows × 25 columns"
+         ✅ CORRECT: "Total Rows: 30,000" and "Dataset Size: 30,000 rows × 25 columns"
+
          The RELEVANT TABLES context will show you:
          - Connector Type: The lowercase connector name (snowflake, postgres, etc.)
          - DATA SOURCE: Which system the table is from (SNOWFLAKE, POSTGRES, etc.)
@@ -133,6 +177,32 @@ def create_smart_dq_agent():
          - check_dataset_duplicates(dataset_id="AGENT_LLM_READ.PUBLIC.CUSTOMERS", connector_type="snowflake")
          - check_dataset_null_values(dataset_id="public.customers", connector_type="postgres")
          - generate_report_from_assessment_results(assessment_results_json="...", output_format="markdown")
+
+         FINAL RESPONSE REQUIREMENTS:
+         When presenting your final analysis, you MUST include:
+
+         For DESCRIPTIVE STATISTICS:
+         1. If the report contains statistical tables, include them COMPLETELY in your summary
+         2. Do NOT truncate or omit statistical data - users need full details
+         3. Copy the complete statistical tables from the tool outputs
+         4. Preserve all columns, rows, and statistical metrics (count, mean, std, min, 25%, 50%, 75%, max, unique, top, freq)
+         5. Present data in clear, well-formatted tables for maximum readability
+
+         For NULL VALUES ANALYSIS:
+         1. ALWAYS include detailed breakdown of missing data per column when null_analysis is available
+         2. If a tool returns null_analysis array with column details, include ALL entries in this format:
+            **Missing Data Details**:
+            - `column_name`: X,XXX nulls (XX.X%)
+         3. Do NOT just show summary statistics - include the complete per-column breakdown
+         4. Even if there are many columns with nulls, list ALL of them (do not truncate)
+         5. This detailed breakdown is ESSENTIAL for proper data quality assessment
+
+         For DATA CONSISTENCY AND ACCURACY:
+         1. **Verify Row Counts**: Ensure all checks report consistent total_rows (extract from tool outputs)
+         2. **Complete Dataset IDs**: Never leave dataset_id empty - use the full table name provided
+         3. **Logical Validation**: Cross-check that duplicate counts make sense relative to total rows
+         4. **Accurate Reporting**: If tool shows 30,000 rows, report exactly that - never default to 0
+         5. **Final Validation**: Before presenting results, verify all sections have matching total_rows
          """
         ),
         MessagesPlaceholder(variable_name="chat_history"),
@@ -181,7 +251,7 @@ def run_smart_dq_check(query: str, top_k_tables: int = 3):
     all_matches = schema_indexer.search_tables(query, top_k=10, min_relevance=0.0)
 
     # Apply relevance threshold filtering
-    MIN_RELEVANCE_THRESHOLD = 0.15  # Reduced from 0.3 to support environment-based detection
+    MIN_RELEVANCE_THRESHOLD = 0.05  # 5% minimum threshold for broader matching
     relevant_tables = schema_indexer.search_tables(query, top_k=top_k_tables, min_relevance=MIN_RELEVANCE_THRESHOLD)
 
     if not relevant_tables:

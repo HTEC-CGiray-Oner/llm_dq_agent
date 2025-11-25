@@ -67,10 +67,16 @@ class SmartDQReportProcessor:
 
         # Determine connector type based on dataset naming convention or explicit mention
         if dataset_id:
-            if 'PROD' in dataset_id.upper() or 'snowflake' in report_output.lower():
+            # Check for explicit database connector mentions first
+            if 'snowflake' in report_output.lower():
                 connector_type = 'snowflake'
-            elif 'STAGE' in dataset_id.upper() or 'postgres' in report_output.lower():
+            elif 'postgres' in report_output.lower():
                 connector_type = 'postgres'
+            # Check for environment-specific patterns (more specific patterns first)
+            elif dataset_id.upper().startswith('STAGE') or '_STAGE' in dataset_id.upper():
+                connector_type = 'postgres'
+            elif dataset_id.upper().startswith('PROD') or '_PROD' in dataset_id.upper():
+                connector_type = 'snowflake'
             else:
                 # Default based on case - uppercase typically Snowflake, lowercase typically Postgres
                 connector_type = 'snowflake' if dataset_id.isupper() else 'postgres'
@@ -81,7 +87,7 @@ class SmartDQReportProcessor:
         """
         Extract structured check results from the Smart DQ Check text output.
 
-        This method parses the agent's text output in order to create a structured dictionary
+        This method parses the agent's markdown output to create a structured dictionary
         of check results.
 
         Args:
@@ -93,7 +99,7 @@ class SmartDQReportProcessor:
         try:
             import json
 
-            # Look for JSON data in the output - the agent often includes structured results
+            # Look for JSON data in the output first - the agent might include structured results
             json_pattern = r'\{[\s\S]*"assessment_results"[\s\S]*\}'
             json_match = re.search(json_pattern, report_output)
 
@@ -107,36 +113,128 @@ class SmartDQReportProcessor:
                     if 'check_results' in assessment_results:
                         return assessment_results['check_results']
 
-            # If JSON parsing fails, try to extract information from text patterns
+            # Parse markdown format (this is the main format from Smart DQ Check)
             check_results = {}
 
-            # Extract duplicate check results
-            duplicate_pattern = r'Duplicate.*?(\d+)\s*duplicate'
-            duplicate_match = re.search(duplicate_pattern, report_output, re.IGNORECASE)
-            if duplicate_match:
+            # Extract duplicate check results from markdown
+            # Pattern: "- **Total Rows**: 37,811" and "- **Duplicate Records**: 0 (0.00% of data)"
+            total_rows_pattern = r'Total Rows.*?(\d+(?:,\d+)*)'
+            duplicate_records_pattern = r'Duplicate Records.*?(\d+)\s*\(([0-9.]+)%'
+
+            total_rows_match = re.search(total_rows_pattern, report_output, re.IGNORECASE)
+            duplicate_match = re.search(duplicate_records_pattern, report_output, re.IGNORECASE)
+
+            # Check if duplicates section shows ERROR
+            duplicate_error_pattern = r'### [❌✅] Duplicates[\s\S]*?- \*\*Status\*\*: ERROR'
+            duplicate_has_error = re.search(duplicate_error_pattern, report_output, re.IGNORECASE)
+
+            total_rows = 0  # Default value for use in null_values check
+            if total_rows_match and duplicate_match:
+                total_rows = int(total_rows_match.group(1).replace(',', ''))
                 duplicate_qty = int(duplicate_match.group(1))
+                percentage = float(duplicate_match.group(2))
+
                 check_results['duplicates'] = {
-                    'status': 'success',
+                    'dataset_id': '',  # Will be filled later
+                    'total_rows': total_rows,
                     'duplicate_qty': duplicate_qty,
-                    'message': f'Found {duplicate_qty} duplicate records'
+                    'status': 'success' if duplicate_qty == 0 else 'failure'
+                }
+            elif duplicate_has_error:
+                # Mark duplicate check as needing re-execution due to error
+                print("   Duplicate check showed ERROR - will re-execute during report generation")
+                check_results['duplicates'] = {
+                    'status': 'error',
+                    'error': 'Agent reported error - requires fresh execution'
                 }
 
-            # Extract null value check results
-            null_pattern = r'Null.*?(\d+).*?column'
+            # Extract null values check results from markdown
+            # Pattern: "- **Columns with Missing Data**: 3 out of 22 columns"
+            null_pattern = r'Columns with Missing Data.*?(\d+)\s*out of\s*(\d+)\s*columns'
             null_match = re.search(null_pattern, report_output, re.IGNORECASE)
             if null_match:
                 columns_with_nulls = int(null_match.group(1))
+                total_columns = int(null_match.group(2))
+
+                # Extract detailed null information and convert to expected format
+                null_analysis = []
+                detail_pattern = r'`([^`]+)`:\s*([0-9,]+)\s*nulls?\s*\(([0-9.]+)%\)'
+                detail_matches = re.findall(detail_pattern, report_output)
+                for column, count_str, percentage in detail_matches:
+                    count = int(count_str.replace(',', ''))
+                    null_analysis.append({
+                        'column_name': column,
+                        'null_count': count,
+                        'null_percentage': float(percentage)
+                    })
+
                 check_results['null_values'] = {
-                    'status': 'success',
+                    'dataset_id': '',  # Will be filled later
+                    'total_rows': total_rows,  # Add total_rows from duplicates check
+                    'total_columns': total_columns,
                     'columns_with_nulls': columns_with_nulls,
-                    'message': f'Found {columns_with_nulls} columns with null values'
+                    'null_analysis': null_analysis,  # Changed from null_details to null_analysis
+                    'status': 'success'  # Always success, template will determine PASS/FAIL based on columns_with_nulls
                 }
 
-            # Extract descriptive stats (harder to parse from text, so we'll flag it as available)
-            if 'descriptive' in report_output.lower() or 'statistic' in report_output.lower():
+            # Extract descriptive stats check from markdown including detailed table data
+            stats_pattern = r'Columns Analyzed.*?(\d+)\s*columns'
+            stats_match = re.search(stats_pattern, report_output, re.IGNORECASE)
+
+            # Look for statistical table data in the output
+            descriptive_stats = {}
+
+            # Check if there's a statistical table in the output
+            if "📊 Complete Statistical Summary:" in report_output or "Statistical Summary" in report_output:
+                # Extract table data - pattern to match table rows
+                table_pattern = r'\|\s*`([^`]+)`\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]*)\|'
+                table_matches = re.findall(table_pattern, report_output)
+
+                for match in table_matches:
+                    if len(match) >= 11:  # Ensure we have all columns
+                        column_name = match[0].strip()
+
+                        def parse_stat_value(value_str):
+                            value = value_str.strip()
+                            if value == '-' or value == '':
+                                return None
+                            try:
+                                # Remove commas and convert to float
+                                cleaned = value.replace(',', '')
+                                if '.' in cleaned:
+                                    return float(cleaned)
+                                else:
+                                    return int(cleaned)
+                            except (ValueError, AttributeError):
+                                return str(value)
+
+                        descriptive_stats[column_name] = {
+                            'count': parse_stat_value(match[1]),
+                            'mean': parse_stat_value(match[2]),
+                            'std': parse_stat_value(match[3]),
+                            'min': parse_stat_value(match[4]),
+                            '25%': parse_stat_value(match[5]),
+                            '50%': parse_stat_value(match[6]),
+                            '75%': parse_stat_value(match[7]),
+                            'max': parse_stat_value(match[8]),
+                            'unique': parse_stat_value(match[9]),
+                            'top': match[10].strip() if match[10].strip() else None,
+                            'freq': parse_stat_value(match[11]) if len(match) > 11 else None
+                        }
+
+            if stats_match:
+                columns_analyzed = int(stats_match.group(1))
                 check_results['descriptive_stats'] = {
                     'status': 'success',
-                    'descriptive_stats': {},
+                    'descriptive_stats': descriptive_stats,  # Include extracted statistical data
+                    'message': 'Descriptive statistics computed',
+                    'columns_analyzed': columns_analyzed
+                }
+            elif 'descriptive' in report_output.lower():
+                # Fallback if pattern doesn't match but descriptive stats are mentioned
+                check_results['descriptive_stats'] = {
+                    'status': 'success',
+                    'descriptive_stats': descriptive_stats,  # Include any extracted data
                     'message': 'Descriptive statistics computed'
                 }
 
@@ -261,7 +359,7 @@ class SmartDQReportProcessor:
         # Step 1: Validate the response
         is_valid, report_output = self.validate_smart_dq_response(comprehensive_report)
 
-        print(f"Report content preview: {report_output[:200]}...")
+        # print(f"Report content preview: {report_output[:200]}...")
 
         if not is_valid:
             print("Smart DQ check failed due to low relevance scores.")
@@ -295,23 +393,18 @@ class SmartDQReportProcessor:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_filename = f"comprehensive_dq_report_{name_suffix}_{timestamp}"
 
-        # Step 4: Try to extract existing check results from the comprehensive report
-        print(f"\nExtracting check results from Smart DQ Check output...")
-        extracted_results = self.extract_check_results_from_report(report_output)
+        # Step 4: Use run_full_assessment to ensure data consistency
+        # This bypasses unreliable agent output parsing and uses DQ check functions directly
+        print(f"\nRunning comprehensive DQ assessment with reliable data sources...")
 
-        if extracted_results:
-            print("   Using existing check results from Smart DQ Check - no duplicate execution!")
-            check_results = extracted_results
-        else:
-            print("   Could not extract structured results - running fresh DQ checks...")
-            check_results = self.execute_dq_checks(dataset_id, connector_type)
-
-        # Step 5: Create assessment
-        assessment_results = self.generator.create_assessment_from_results(
-            check_results=check_results,
+        # Use run_full_assessment to get consistent results
+        assessment_results = self.generator.run_full_assessment(
             dataset_id=dataset_id,
             connector_type=connector_type
         )
+
+        print("   ✅ Assessment completed using direct DQ check execution!")
+        print("   ✅ Data consistency guaranteed - no parsing errors!")
 
         # Step 6: Generate all reports
         print(f"\nGenerating reports using standardized templates...")

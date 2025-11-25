@@ -1,0 +1,369 @@
+{
+  "metadata": {
+    "dataset_id": "stage_sales.public.customers",
+    "connector_type": "postgres",
+    "timestamp": "2025-11-26T00:45:36.924428",
+    "checks_requested": [
+      "duplicates",
+      "null_values",
+      "descriptive_stats"
+    ],
+    "total_checks": 3
+  },
+  "check_results": {
+    "duplicates": {
+      "dataset_id": "stage_sales.public.customers",
+      "total_rows": 50000,
+      "duplicate_qty": 1134,
+      "status": "failure"
+    },
+    "null_values": {
+      "dataset_id": "stage_sales.public.customers",
+      "total_rows": 50000,
+      "total_columns": 22,
+      "columns_with_nulls": 4,
+      "null_analysis": [
+        {
+          "column_name": "company",
+          "null_count": "9000",
+          "null_percentage": 18.0
+        },
+        {
+          "column_name": "phone",
+          "null_count": "7500",
+          "null_percentage": 15.0
+        },
+        {
+          "column_name": "email",
+          "null_count": "6000",
+          "null_percentage": 12.0
+        },
+        {
+          "column_name": "address",
+          "null_count": "4000",
+          "null_percentage": 8.0
+        }
+      ],
+      "status": "success"
+    },
+    "descriptive_stats": {
+      "dataset_id": "stage_sales.public.customers",
+      "descriptive_stats": {
+        "customer_id": {
+          "count": 50000.0,
+          "unique": 46000.0,
+          "top": 15036.0,
+          "freq": 4.0,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "first_name": {
+          "count": 50000,
+          "unique": "690",
+          "top": "Michael",
+          "freq": 1102,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "last_name": {
+          "count": 50000,
+          "unique": "1000",
+          "top": "Smith",
+          "freq": 1137,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "email": {
+          "count": 44000,
+          "unique": "37995",
+          "top": "pwilliams@example.com",
+          "freq": 10,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "phone": {
+          "count": 42500,
+          "unique": "39581",
+          "top": "611.462.7724",
+          "freq": 4,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "address": {
+          "count": 46000,
+          "unique": "42615",
+          "top": "029 George Plains, Deanchester, UT 92965",
+          "freq": 4,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "city": {
+          "count": 50000,
+          "unique": "23860",
+          "top": "West Michael",
+          "freq": 54,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "state": {
+          "count": 50000,
+          "unique": "50",
+          "top": "Nevada",
+          "freq": 1075,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "zip_code": {
+          "count": 50000,
+          "unique": "36805",
+          "top": "20762",
+          "freq": 6,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "country": {
+          "count": 50000,
+          "unique": "243",
+          "top": "Korea",
+          "freq": 440,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "date_of_birth": {
+          "count": 50000,
+          "unique": "20933",
+          "top": "1964-12-02",
+          "freq": 13,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "age": {
+          "count": 50000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 77.60036,
+          "std": 127.63483748924202,
+          "min": 18.0,
+          "25%": 35.0,
+          "50%": 53.0,
+          "75%": 71.0,
+          "max": 998.0
+        },
+        "gender": {
+          "count": 50000,
+          "unique": "3",
+          "top": "M",
+          "freq": 16701,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "company": {
+          "count": 41000,
+          "unique": "29125",
+          "top": "Smith Inc",
+          "freq": 59,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "job_title": {
+          "count": 50000,
+          "unique": "639",
+          "top": "Commercial art gallery manager",
+          "freq": 108,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "income": {
+          "count": 50000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 108792.64582,
+          "std": 52212.69440663296,
+          "min": -49970.0,
+          "25%": 75629.75,
+          "50%": 111537.5,
+          "75%": 144938.0,
+          "max": 255659.0
+        },
+        "account_balance": {
+          "count": 50000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 30021883.967902202,
+          "std": 170585079.08350962,
+          "min": -4997.18,
+          "25%": 9329.1075,
+          "50%": 23390.89,
+          "75%": 37626.605,
+          "max": 999999999.99
+        },
+        "credit_score": {
+          "count": 50000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 574.99898,
+          "std": 159.0519903983367,
+          "min": 300.0,
+          "25%": 437.0,
+          "50%": 574.0,
+          "75%": 713.0,
+          "max": 850.0
+        },
+        "registration_date": {
+          "count": 50000,
+          "unique": "1827",
+          "top": "2024-09-13",
+          "freq": 47,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "last_login": {
+          "count": 50000,
+          "unique": "90",
+          "top": "2025-10-09",
+          "freq": 625,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "is_active": {
+          "count": 50000,
+          "unique": "2",
+          "top": "False",
+          "freq": 25048,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "customer_segment": {
+          "count": 50000,
+          "unique": "4",
+          "top": "Standard",
+          "freq": 12691,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        }
+      },
+      "status": "success"
+    }
+  },
+  "summary": {
+    "passed_checks": 1,
+    "failed_checks": 2,
+    "error_checks": 0
+  },
+  "recommendations": [
+    {
+      "title": "Establish Data Quality Framework",
+      "description": "Only 33% of checks passed. Consider implementing: 1) Data validation at ingestion, 2) Regular quality monitoring, 3) Data stewardship roles, 4) Quality metrics dashboards.",
+      "priority": "High"
+    },
+    {
+      "title": "Implement Null Handling Strategy",
+      "description": "Columns `company`, `phone`, `email` have 5-20% null values. Consider implementing NOT NULL constraints, data validation rules, or imputation strategies based on business logic.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Investigate High Variability in account_balance",
+      "description": "Column `account_balance` has high variability (CV=5.68). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Data Documentation and Profiling",
+      "description": "Dataset has 22 columns. Consider creating data dictionaries, establishing column-level monitoring, and implementing regular statistical profiling to track data drift over time.",
+      "priority": "Low"
+    }
+  ]
+}

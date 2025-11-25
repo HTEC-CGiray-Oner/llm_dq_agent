@@ -25,6 +25,37 @@ class DataQualityReportGenerator:
             'descriptive_stats': check_dataset_descriptive_stats
         }
 
+    def run_full_assessment(self, dataset_id: str, connector_type: str = 'postgres',
+                           checks: List[str] = None) -> Dict[str, Any]:
+        """
+        Execute a comprehensive data quality assessment by running all DQ checks directly.
+
+        This method ensures data consistency by executing DQ checks once and using those
+        results as the single source of truth for all report sections.
+
+        Args:
+            dataset_id: The dataset identifier (table name)
+            connector_type: Database connector type ('postgres', 'snowflake')
+            checks: List of checks to run (default: all available checks)
+
+        Returns:
+            Dict containing comprehensive assessment results
+        """
+        if checks is None:
+            checks = list(self.available_checks.keys())
+
+        # Execute DQ checks directly
+        check_results = {}
+        for check_name in checks:
+            if check_name in self.available_checks:
+                print(f"   Executing {check_name} check...")
+                check_results[check_name] = self.available_checks[check_name](
+                    dataset_id, connector_type=connector_type
+                )
+
+        # Create assessment from these reliable results
+        return self.create_assessment_from_results(check_results, dataset_id, connector_type)
+
     def create_assessment_from_results(self, check_results: Dict[str, Any], dataset_id: str,
                                      connector_type: str = 'postgres') -> Dict[str, Any]:
         """
