@@ -1,0 +1,26 @@
+{
+  "schemas": [
+    "DATA_MART_FINANCE",
+    "DATA_MART_MANUFACTURING",
+    "DATA_MART_MARKETING",
+    "PUBLIC"
+  ],
+  "tables_per_schema": {
+    "DATA_MART_FINANCE": [
+      "INCOME_BAND",
+      "INVOICES"
+    ],
+    "DATA_MART_MANUFACTURING": [
+      "PRODUCTS"
+    ],
+    "DATA_MART_MARKETING": [
+      "CALL_CENTER",
+      "CUSTOMERS",
+      "SALES"
+    ],
+    "PUBLIC": []
+  },
+  "total_schemas": 4,
+  "total_tables": 6,
+  "timestamp": "2025-11-25T18:23:19.944855"
+}

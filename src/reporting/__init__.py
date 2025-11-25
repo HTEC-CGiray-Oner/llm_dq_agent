@@ -13,9 +13,11 @@ This module provides comprehensive data quality reporting capabilities including
 from .report_generator import DataQualityReportGenerator
 from .report_templates import ReportTemplates
 from .remediation_advisor import RemediationAdvisor
+from .report_processor import SmartDQReportProcessor
 
 __all__ = [
     'DataQualityReportGenerator',
     'ReportTemplates',
-    'RemediationAdvisor'
+    'RemediationAdvisor',
+    'SmartDQReportProcessor'
 ]

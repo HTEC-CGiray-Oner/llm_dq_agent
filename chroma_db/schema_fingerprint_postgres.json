@@ -1,0 +1,15 @@
+{
+  "schemas": [
+    "public"
+  ],
+  "tables_per_schema": {
+    "public": [
+      "customers",
+      "invoices",
+      "products"
+    ]
+  },
+  "total_schemas": 1,
+  "total_tables": 3,
+  "timestamp": "2025-11-25T17:43:18.410174"
+}

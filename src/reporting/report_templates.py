@@ -198,7 +198,7 @@ class ReportTemplates:
 <body>
     <div class="header">
         <h1>📊 Data Quality Assessment Report</h1>
-        <p>Comprehensive analysis of dataset: <code>{metadata['dataset_id']}</code></p>
+        <p>Comprehensive analysis of dataset: <code style="color: black; background: white; font-weight: bold;">{metadata['dataset_id']}</code></p>
     </div>
 
     <div class="summary-grid">
