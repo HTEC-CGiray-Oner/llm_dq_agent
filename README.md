@@ -148,16 +148,19 @@ Folder where data quality reports are saved:
 
 ## How to Ask Questions
 
-For best results, these details should be included in questions:
+For best results, these details can be included in questions:
+Even though those are not added in queries relevance score by semantic similarity will be taken into so below items are not mandatory.
+Relevance score calculation based on table description, column details, sample data, row counts will get better score.
+For this POC, staging database defined as postgre on local while snowflake defined as prod database and data flaws are less in prod.
 
 ### Database Environment
-The database environment to be checked should be specified:
+Optional ! The database environment to be checked can be specified:
 - **Staging**: "check staging customer table for duplicates"
 - **Production**: "analyze prod sales data quality"
 - **Development**: "find missing values in dev user table"
 
 ### Database Type
-Optional ! The database system being used should be mentioned (not mandatory, can help increase relevance score in RAG process):
+Optional ! The database system being used can be mentioned (not mandatory, can help increase relevance score in RAG process):
 - **Snowflake**: "check snowflake customer data for quality issues"
 - **PostgreSQL**: "analyze postgres analytics table for duplicates"
 
