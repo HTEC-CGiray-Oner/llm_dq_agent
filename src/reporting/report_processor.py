@@ -37,6 +37,10 @@ class SmartDQReportProcessor:
         if "No tables found with sufficient relevance" in report_output:
             return False, report_output
 
+        # Check for no tables found at all
+        if "No relevant tables found" in report_output:
+            return False, report_output
+
         return True, report_output
 
     def extract_dataset_metadata(self, report_output: str) -> Tuple[Optional[str], Optional[str]]:
@@ -52,11 +56,12 @@ class SmartDQReportProcessor:
         dataset_id = None
         connector_type = None
 
-        # Look for patterns like "stage_sales.public.customers" or "PROD_SALES.PUBLIC.CUSTOMERS"
+        # Look for patterns like "stage_sales.analytics.customers" or "PROD_SALES.REPORTING.CUSTOMERS"
+        # Updated to support any schema name, not just "public"
         dataset_patterns = [
-            r'`([^`]+\.public\.[^`]+)`',  # Pattern: `schema.public.table`
-            r'([A-Z_]+\.[A-Z_]+\.[A-Z_]+)',  # Pattern: SCHEMA.PUBLIC.TABLE
-            r'([a-z_]+\.public\.[a-z_]+)',   # Pattern: schema.public.table
+            r'`([^`]+\.[^`]+\.[^`]+)`',      # Pattern: `database.schema.table`
+            r'([A-Z_]+\.[A-Z_]+\.[A-Z_]+)',  # Pattern: DATABASE.SCHEMA.TABLE
+            r'([a-z_]+\.[a-z_]+\.[a-z_]+)',  # Pattern: database.schema.table
         ]
 
         for pattern in dataset_patterns:
@@ -377,7 +382,9 @@ class SmartDQReportProcessor:
         dataset_id, connector_type = self.extract_dataset_metadata(report_output)
 
         if not dataset_id:
-            print("Could not extract dataset from successful report - this shouldn't happen!")
+            print("Could not extract dataset information from agent response.")
+            print("The agent response format may have changed or uses unexpected table naming patterns.")
+            print("Please check the agent output format or update the extraction patterns.")
             return {
                 'status': 'failed',
                 'reason': 'metadata_extraction_failed',
@@ -403,8 +410,8 @@ class SmartDQReportProcessor:
             connector_type=connector_type
         )
 
-        print("   ✅ Assessment completed using direct DQ check execution!")
-        print("   ✅ Data consistency guaranteed - no parsing errors!")
+        print("    Assessment completed using direct DQ check execution!")
+        print("    Data consistency guaranteed - no parsing errors!")
 
         # Step 6: Generate all reports
         print(f"\nGenerating reports using standardized templates...")

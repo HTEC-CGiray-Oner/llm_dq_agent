@@ -81,7 +81,9 @@ class SchemaIndexer:
             'oracle': 'Oracle',
             'sqlite': 'SQLite'
         }
-        return display_names.get(self.connector_type, self.connector_type.title())
+        # Convert to lowercase for case-insensitive matching
+        connector_lower = self.connector_type.lower()
+        return display_names.get(connector_lower, self.connector_type.title())
 
     def _get_all_schemas(self, database: Optional[str] = None) -> List[str]:
         """Discover all schemas from INFORMATION_SCHEMA."""

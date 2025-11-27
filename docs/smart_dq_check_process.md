@@ -76,6 +76,12 @@ The system intelligently determines connector types through multiple strategies 
 
 5. **Agent Selection** (Phase 3): LLM agent receives enriched table context from RAG with pre-determined connector types and makes final intelligent selection based on query semantics and table metadata
 
+**Recent Connector Detection Improvements**:
+- **Fixed Pattern Matching**: Resolved issue where 'PROD' was incorrectly found in 'PRODUCTS' tables
+- **Environment-Specific Patterns**: `startswith('STAGE')` and `startswith('PROD')` for more precise matching
+- **Staging Query Fix**: `stage_sales.public.products` now correctly detects as postgres (was incorrectly detecting as snowflake)
+- **Priority Order**: Explicit mentions → Environment patterns → Case-based defaults
+
 Example configuration in `settings.yaml`:
 ```yaml
 default_connector: snowflake
@@ -229,7 +235,13 @@ Tool Execution: check_dataset_duplicates(dataset_id, connector_type)
     └── Return to LLM agent for natural language response
 ```
 
-**Purpose**: Executes actual data quality analysis using hybrid SQL+Pandas approach with intelligent connector management and comprehensive error handling.
+**Purpose**: Executes actual data quality analysis using hybrid SQL+Pandas approach with intelligent connector management and comprehensive error handling. Now enhanced with run_full_assessment method for guaranteed data consistency.
+
+**Enhanced Reliability Features**:
+- **run_full_assessment Integration**: Report generation now uses direct DQ check execution instead of agent output parsing
+- **Consistent Data Flow**: Single execution path ensures matching total_rows across duplicates, null_values, and descriptive_stats sections
+- **Parsing Error Elimination**: Bypasses unreliable regex extraction from agent responses
+- **Guaranteed Accuracy**: Direct function calls provide verified results with consistent row counts
 
 **Analysis Capabilities**:
 - **Duplicate Detection**: Complete row duplicate analysis with counts and percentages

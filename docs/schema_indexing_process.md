@@ -219,16 +219,22 @@ search_results = vector_store.similarity_search("customer data", k=3)
 - **Natural Language Queries**: Users can search with phrases like "find sales tables" or "show customer data"
 - **Semantic Matching**: Vector embeddings enable context-aware table recommendations
 - **Cross-Database Support**: Unified search across multiple database platforms
+- **Improved Reliability**: Enhanced connector detection prevents staging queries from returning empty results
 
 ### Scalable Architecture
 - **Factory Pattern**: Easy addition of new database types
 - **Configurable Discovery**: Flexible schema and table selection
 - **Efficient Storage**: Optimized vector storage for fast retrieval
+### Enhanced Pattern Matching**: Fixed connector type detection for accurate table-to-database mapping
+- **Case-Insensitive Database Names**: Improved `_get_db_display_name()` for flexible user input handling
+- **Universal Schema Support**: Enhanced regex patterns to match any schema names, not limited to 'public'
+- **Improved Environment Detection**: Better staging/production pattern matching for connector selection
 
 ### Robust Implementation
 - **Automatic Resource Management**: Context managers ensure proper cleanup
 - **Error Handling**: Graceful degradation for connection failures
 - **Configuration Flexibility**: Multiple configuration sources (YAML, environment variables)
+- **Connector Detection Improvements**: Resolved staging/production environment detection issues
 
 ## Technical Specifications
 

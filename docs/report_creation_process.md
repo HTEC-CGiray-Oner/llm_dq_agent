@@ -33,13 +33,15 @@ Post run_smart_dq_check() Processing - processor.process_comprehensive_report()
 │   ├── if failure_detected:                        📍 Return (False, report_output)
 │   └── ✅ Success: Return (True, report_output)    📍 Proceed with metadata extraction
 ├── Dataset Metadata Extraction                     📍 dataset_id, connector_type = self.extract_dataset_metadata(report_output)
-│   ├── Dataset ID Pattern Matching                 📍 Regex-based extraction from agent text
-│   │   ├── r'`([^`]+\.public\.[^`]+)`'             📍 Pattern: `schema.public.table`
-│   │   ├── r'([A-Z_]+\.[A-Z_]+\.[A-Z_]+)'          📍 Pattern: SCHEMA.PUBLIC.TABLE
-│   │   └── r'([a-z_]+\.public\.[a-z_]+)'           📍 Pattern: schema.public.table
-│   └── Connector Type Detection                    📍 Environment-based intelligence
-│       ├── if 'PROD_SALES' in dataset_id: connector = 'snowflake'
-│       ├── elif 'STAGE_SALES' in dataset_id: connector = 'postgres'
+│   ├── Dataset ID Pattern Matching                 📍 Enhanced regex patterns for any schema
+│   │   ├── r'`([^`]+\.[^`]+\.[^`]+)`'              📍 Pattern: `database.schema.table` (any schema)
+│   │   ├── r'([A-Z_]+\.[A-Z_]+\.[A-Z_]+)'          📍 Pattern: DATABASE.SCHEMA.TABLE (any schema)
+│   │   └── r'([a-z_]+\.[a-z_]+\.[a-z_]+)'          📍 Pattern: database.schema.table (any schema)
+│   └── Connector Type Detection                    📍 Improved environment-based intelligence
+│       ├── if 'snowflake' in report_output.lower(): connector = 'snowflake'
+│       ├── elif 'postgres' in report_output.lower(): connector = 'postgres'
+│       ├── elif dataset_id.upper().startswith('STAGE') or '_STAGE' in dataset_id.upper(): connector = 'postgres'
+│       ├── elif dataset_id.upper().startswith('PROD') or '_PROD' in dataset_id.upper(): connector = 'snowflake'
 │       └── else: connector = 'snowflake' if uppercase else 'postgres'
 ├── Check Result Extraction                         📍 extracted_results = self.extract_check_results_from_report(report_output)
 │   ├── JSON Pattern Matching                       📍 Extract embedded assessment_results JSON
@@ -53,29 +55,31 @@ Post run_smart_dq_check() Processing - processor.process_comprehensive_report()
 
 **Purpose**: Validates Smart DQ Check success using a single validation call, extracts dataset metadata and existing check results from agent response text, and prepares filename components for structured report generation.
 
-### Phase 2: Optimized Assessment Data Processing
+### Phase 2: Reliable Assessment Data Processing with run_full_assessment
 ```
-Intelligent Assessment Result Processing             📍 SmartDQReportProcessor optimized workflow
-├── Primary Path: Extracted Results (OPTIMIZED)     📍 Performance-first approach
-│   ├── if extracted_results exist:                 📍 Use data from Smart DQ Check output
-│   │   ├── print("Using existing check results - no duplicate execution!")
-│   │   ├── check_results = extracted_results       📍 Reuse parsed structured data
-│   │   └── ✅ Skip database queries entirely       📍 Major performance improvement
-│   └── Benefits: 🚀 No database connections, faster execution, reduced server load
-├── Fallback Path: Fresh Execution                  📍 Reliability guarantee
-│   ├── if extraction_failed:                       📍 Only when parsing fails
-│   │   ├── print("Could not extract - running fresh DQ checks...")
-│   │   └── SmartDQReportProcessor.execute_dq_checks() 📍 Traditional database execution
-│   └── check_dataset_duplicates() + check_dataset_null_values() + check_dataset_descriptive_stats()
-└── Direct Assessment Creation                       📍 Simplified architecture
-    ├── generator.create_assessment_from_results()   📍 Direct method call (no wrapper)
-    │   ├── check_results=extracted_or_fresh_data   📍 Use optimal data source
+Reliable Assessment Result Processing               📍 SmartDQReportProcessor with restored run_full_assessment
+├── Primary Path: run_full_assessment (RELIABLE)    📍 Consistency-first approach
+│   ├── generator.run_full_assessment()             📍 Direct DQ check execution
+│   │   ├── print("Running comprehensive DQ assessment with reliable data sources...")
+│   │   ├── Execute all DQ checks directly          📍 Bypasses agent output parsing
+│   │   ├── check_dataset_duplicates(dataset_id, connector_type)
+│   │   ├── check_dataset_null_values(dataset_id, connector_type)
+│   │   ├── check_dataset_descriptive_stats(dataset_id, connector_type)
+│   │   └── ✅ Guaranteed data consistency          📍 Single source of truth
+│   └── Benefits: 🚀 No parsing errors, consistent total_rows, reliable results
+├── Fallback Path: Legacy Extraction               📍 Removed due to reliability issues
+│   ├── Previously used agent output parsing        📍 Caused total_rows=0 inconsistencies
+│   ├── extract_check_results_from_report()        📍 Regex-based parsing unreliable
+│   └── ❌ Removed in favor of direct execution    📍 Ensures data accuracy
+└── Direct Assessment Creation                       📍 Simplified reliable architecture
+    ├── generator.create_assessment_from_results()   📍 Uses run_full_assessment results
+    │   ├── check_results=reliable_dq_data          📍 Consistent data from direct execution
     │   ├── dataset_id=extracted_metadata           📍 Parsed dataset identifier
-    │   └── connector_type=detected_type            📍 Intelligent connector detection
-    └── assessment_results = standardized_structure 📍 Unified output format
+    │   └── connector_type=detected_type            📍 Improved connector detection logic
+    └── assessment_results = consistent_structure    📍 Reliable output format
 ```
 
-**Purpose**: Creates comprehensive assessment data using an optimized two-path approach: first attempting to extract existing results from Smart DQ Check output to avoid duplicate database queries, then falling back to fresh execution only when necessary for reliability.
+**Purpose**: Creates comprehensive assessment data using the restored run_full_assessment method that ensures data consistency by executing DQ checks directly, eliminating parsing errors and guaranteeing consistent total_rows values across all report sections.
 
 **Analysis Capabilities**:
 - **Duplicate Detection**: Complete row-level duplicate identification with statistical summaries
@@ -83,6 +87,12 @@ Intelligent Assessment Result Processing             📍 SmartDQReportProcessor
 - **Statistical Profiling**: Comprehensive descriptive statistics for numerical and categorical data
 - **Data Type Validation**: Schema analysis and data type consistency checking
 - **Memory Profiling**: Resource usage analysis for large dataset optimization
+
+**New run_full_assessment Method Benefits**:
+- **Data Consistency**: Eliminates total_rows=0 issues by using direct DQ check execution
+- **Reliable Results**: Single source of truth ensures consistent row counts across all sections
+- **Parsing Independence**: Bypasses unreliable agent output parsing completely
+- **Guaranteed Accuracy**: Direct function calls provide verified data quality metrics
 
 ### Phase 3: Multi-Format Report Template Processing
 ```
