@@ -1,0 +1,408 @@
+{
+  "metadata": {
+    "dataset_id": "stage_sales.public.invoices",
+    "connector_type": "postgres",
+    "timestamp": "2025-11-27T15:22:22.057247",
+    "checks_requested": [
+      "duplicates",
+      "null_values",
+      "descriptive_stats"
+    ],
+    "total_checks": 3
+  },
+  "check_results": {
+    "duplicates": {
+      "dataset_id": "stage_sales.public.invoices",
+      "total_rows": 200000,
+      "duplicate_qty": 100001,
+      "status": "failure"
+    },
+    "null_values": {
+      "dataset_id": "stage_sales.public.invoices",
+      "total_rows": 200000,
+      "total_columns": 20,
+      "columns_with_nulls": 9,
+      "null_analysis": [
+        {
+          "column_name": "notes",
+          "null_count": "149954",
+          "null_percentage": 74.98
+        },
+        {
+          "column_name": "discount_amount",
+          "null_count": "129896",
+          "null_percentage": 64.95
+        },
+        {
+          "column_name": "customer_company",
+          "null_count": "39906",
+          "null_percentage": 19.95
+        },
+        {
+          "column_name": "shipping_address",
+          "null_count": "35994",
+          "null_percentage": 18.0
+        },
+        {
+          "column_name": "billing_address",
+          "null_count": "29786",
+          "null_percentage": 14.89
+        },
+        {
+          "column_name": "due_date",
+          "null_count": "23790",
+          "null_percentage": 11.9
+        },
+        {
+          "column_name": "payment_method",
+          "null_count": "15718",
+          "null_percentage": 7.86
+        },
+        {
+          "column_name": "tax_rate",
+          "null_count": "10284",
+          "null_percentage": 5.14
+        },
+        {
+          "column_name": "tax_amount",
+          "null_count": "10284",
+          "null_percentage": 5.14
+        }
+      ],
+      "status": "success"
+    },
+    "descriptive_stats": {
+      "dataset_id": "stage_sales.public.invoices",
+      "descriptive_stats": {
+        "invoice_id": {
+          "count": 200000.0,
+          "unique": 99999.0,
+          "top": 1.0,
+          "freq": 4.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "customer_id": {
+          "count": 200000.0,
+          "unique": 39775.0,
+          "top": 8339.0,
+          "freq": 22.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "product_id": {
+          "count": 200000.0,
+          "unique": 26595.0,
+          "top": 24312.0,
+          "freq": 34.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "invoice_date": {
+          "count": 200000,
+          "unique": "734",
+          "top": "2023-12-15",
+          "freq": 346,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "due_date": {
+          "count": 176210,
+          "unique": "775",
+          "top": "2024-10-18",
+          "freq": 306,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "quantity": {
+          "count": 200000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 230.2036,
+          "min": -10.0,
+          "25%": 3.0,
+          "50%": 6.0,
+          "75%": 8.0,
+          "max": 15000.0,
+          "std": 1822.6524185582487
+        },
+        "unit_price": {
+          "count": 200000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 1206.2983547000001,
+          "min": -100.0,
+          "25%": 126.07,
+          "50%": 253.775,
+          "75%": 380.7625,
+          "max": 75000.0,
+          "std": 8407.375462554244
+        },
+        "subtotal": {
+          "count": 200000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 320459.8163852,
+          "min": -1500000.0,
+          "25%": 420.4075,
+          "50%": 1069.94,
+          "75%": 2176.905,
+          "max": 1125000000.0,
+          "std": 17066686.356090445
+        },
+        "discount_amount": {
+          "count": 70104.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 39452.648873958686,
+          "min": -357117.34,
+          "25%": 54.905,
+          "50%": 143.825,
+          "75%": 312.165,
+          "max": 275585449.8,
+          "std": 2642945.087062921
+        },
+        "tax_rate": {
+          "count": 189716.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 1.145281631491282,
+          "min": -10.0,
+          "25%": 0.0742,
+          "50%": 0.0999,
+          "75%": 0.1258,
+          "max": 75.0,
+          "std": 9.484970300603699
+        },
+        "tax_amount": {
+          "count": 189716.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": -33390.503440511064,
+          "min": -11250000000.0,
+          "25%": 35.37,
+          "50%": 95.18,
+          "75%": 202.44,
+          "max": 546491250.0,
+          "std": 36825764.44880797
+        },
+        "total_amount": {
+          "count": 200000.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 279924.64028479997,
+          "min": -10125000000.0,
+          "25%": 406.075,
+          "50%": 1099.46,
+          "75%": 2327.415,
+          "max": 1290487500.0,
+          "std": 36821213.44356428
+        },
+        "invoice_status": {
+          "count": 200000,
+          "unique": "6",
+          "top": "Overdue",
+          "freq": 33530,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "payment_method": {
+          "count": 184282,
+          "unique": "6",
+          "top": "Bank Transfer",
+          "freq": 31148,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "customer_company": {
+          "count": 160094,
+          "unique": "52103",
+          "top": "Smith Group",
+          "freq": 214,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "billing_address": {
+          "count": 170214,
+          "unique": "78312",
+          "top": "181 Johnson Course, East William, AK 74064",
+          "freq": 4,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "shipping_address": {
+          "count": 164006,
+          "unique": "75438",
+          "top": "79402 Peterson Drives Apt. 511, Davisstad, PA 35172",
+          "freq": 4,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "notes": {
+          "count": 50046,
+          "unique": "23054",
+          "top": "Act support sense hard nearly white us. Voice before cost less.\nFinally area candidate. Month sound moment pay art realize.",
+          "freq": 4,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "created_at": {
+          "count": 200000,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": "2025-05-20 12:43:59.477319936",
+          "min": "2023-11-21 14:14:13",
+          "25%": "2025-02-12 08:03:02.249999872",
+          "50%": "2025-07-05 11:19:46",
+          "75%": "2025-10-01 12:52:34.500000",
+          "max": "2025-11-20 11:19:04",
+          "std": null
+        },
+        "updated_at": {
+          "count": 200000,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": "2025-05-20 20:35:41.407069952",
+          "min": "2023-11-20 07:03:47",
+          "25%": "2025-02-12 17:54:28.249999872",
+          "50%": "2025-07-05 18:32:09",
+          "75%": "2025-09-30 23:02:02",
+          "max": "2025-11-20 11:14:50",
+          "std": null
+        }
+      },
+      "status": "success"
+    }
+  },
+  "summary": {
+    "passed_checks": 1,
+    "failed_checks": 2,
+    "error_checks": 0
+  },
+  "recommendations": [
+    {
+      "title": "Address High Null Value Columns",
+      "description": "Columns `notes`, `discount_amount` have >20% null values. Consider: 1) Data source validation, 2) Default value strategies, 3) Imputation techniques, or 4) Column removal if not critical.",
+      "priority": "High"
+    },
+    {
+      "title": "Establish Data Quality Framework",
+      "description": "Only 33% of checks passed. Consider implementing: 1) Data validation at ingestion, 2) Regular quality monitoring, 3) Data stewardship roles, 4) Quality metrics dashboards.",
+      "priority": "High"
+    },
+    {
+      "title": "Implement Null Handling Strategy",
+      "description": "Columns `customer_company`, `shipping_address`, `billing_address` have 5-20% null values. Consider implementing NOT NULL constraints, data validation rules, or imputation strategies based on business logic.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Comprehensive Data Governance",
+      "description": "9 columns have null values. Implement data governance policies including mandatory field validation, data entry training, and upstream data quality monitoring.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Investigate High Variability in quantity",
+      "description": "Column `quantity` has high variability (CV=7.92). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in unit_price",
+      "description": "Column `unit_price` has high variability (CV=6.97). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in subtotal",
+      "description": "Column `subtotal` has high variability (CV=53.26). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in discount_amount",
+      "description": "Column `discount_amount` has high variability (CV=66.99). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in tax_rate",
+      "description": "Column `tax_rate` has high variability (CV=8.28). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in tax_amount",
+      "description": "Column `tax_amount` has high variability (CV=1102.88). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in total_amount",
+      "description": "Column `total_amount` has high variability (CV=131.54). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Data Documentation and Profiling",
+      "description": "Dataset has 20 columns. Consider creating data dictionaries, establishing column-level monitoring, and implementing regular statistical profiling to track data drift over time.",
+      "priority": "Low"
+    }
+  ]
+}
