@@ -146,13 +146,32 @@ Folder where data quality reports are saved:
 4. **Build table search database**: Run `python src/retrieval/schema_indexer.py` to let the system learn about tables
 5. **Start using it**: Open `notebooks/tryouts.ipynb` to try it out or use the code directly
 
-## How to Ask Questions
+## How to ask questions to Smart Search
 
-For best results, below details can be included in questions:
-Even though those are not added in queries relevance score by semantic similarity will be taken into so below items are not mandatory.
-Relevance score calculation based on table description, column details, sample data, row counts will get better score. Besides agent picks more context related options even relevance are lower.
-However for relevance there is a threshold of %20 in order to avoid unrelated table based operations.
-For this POC, staging database defined as postgre on local while snowflake defined as prod database and data flaws are less in prod.
+The system uses **Hybrid RAG** (Retrieval-Augmented Generation) to find the right tables for your questions. This combines two techniques:
+
+1. **Semantic Search**: Understands the meaning of your question (e.g., "customer data" matches "CUSTOMERS" table)
+2. **Metadata Boosting**: Gives extra priority to tables that match specific keywords in your query
+
+### What This Means for Your Questions
+
+**Good to include (but not required):**
+- Environment keywords: "staging", "prod", "development"
+- Database types: "snowflake", "postgres"
+
+**Why it helps:**
+- Better table matching through semantic understanding
+- Faster results through metadata boosting
+- More accurate analysis on the right tables
+
+**Quality threshold:**
+- Tables must have at least 20% relevance to your question
+- This prevents analysis on completely unrelated tables
+- Ensures data quality checks are meaningful
+
+**Current setup:**
+- **Staging**: PostgreSQL database (local)
+- **Production**: Snowflake database (cleaner data, fewer quality issues)
 
 ### Database Environment
 Optional ! The database environment to be checked can be specified:
