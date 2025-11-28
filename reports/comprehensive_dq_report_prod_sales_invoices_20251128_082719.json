@@ -1,0 +1,378 @@
+{
+  "metadata": {
+    "dataset_id": "PROD_SALES.DATA_MART_FINANCE.INVOICES",
+    "connector_type": "snowflake",
+    "timestamp": "2025-11-28T08:28:11.209936",
+    "checks_requested": [
+      "duplicates",
+      "null_values",
+      "descriptive_stats"
+    ],
+    "total_checks": 3
+  },
+  "check_results": {
+    "duplicates": {
+      "dataset_id": "PROD_SALES.DATA_MART_FINANCE.INVOICES",
+      "total_rows": 91685,
+      "duplicate_qty": 0,
+      "status": "success"
+    },
+    "null_values": {
+      "dataset_id": "PROD_SALES.DATA_MART_FINANCE.INVOICES",
+      "total_rows": 91685,
+      "total_columns": 20,
+      "columns_with_nulls": 9,
+      "null_analysis": [
+        {
+          "column_name": "NOTES",
+          "null_count": "68730",
+          "null_percentage": 74.96
+        },
+        {
+          "column_name": "DISCOUNT_AMOUNT",
+          "null_count": "59748",
+          "null_percentage": 65.17
+        },
+        {
+          "column_name": "CUSTOMER_COMPANY",
+          "null_count": "18225",
+          "null_percentage": 19.88
+        },
+        {
+          "column_name": "SHIPPING_ADDRESS",
+          "null_count": "16474",
+          "null_percentage": 17.97
+        },
+        {
+          "column_name": "BILLING_ADDRESS",
+          "null_count": "13695",
+          "null_percentage": 14.94
+        },
+        {
+          "column_name": "DUE_DATE",
+          "null_count": "10951",
+          "null_percentage": 11.94
+        },
+        {
+          "column_name": "PAYMENT_METHOD",
+          "null_count": "7222",
+          "null_percentage": 7.88
+        },
+        {
+          "column_name": "TAX_RATE",
+          "null_count": "4862",
+          "null_percentage": 5.3
+        },
+        {
+          "column_name": "TAX_AMOUNT",
+          "null_count": "4862",
+          "null_percentage": 5.3
+        }
+      ],
+      "status": "success"
+    },
+    "descriptive_stats": {
+      "dataset_id": "PROD_SALES.DATA_MART_FINANCE.INVOICES",
+      "descriptive_stats": {
+        "INVOICE_ID": {
+          "count": 91685.0,
+          "unique": 91685.0,
+          "top": 1.0,
+          "freq": 1.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "CUSTOMER_ID": {
+          "count": 91685.0,
+          "unique": 38674.0,
+          "top": 8339.0,
+          "freq": 11.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "PRODUCT_ID": {
+          "count": 91685.0,
+          "unique": 26297.0,
+          "top": 24312.0,
+          "freq": 17.0,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "INVOICE_DATE": {
+          "count": 91685,
+          "unique": "734",
+          "top": "2024-04-16",
+          "freq": 160,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "DUE_DATE": {
+          "count": 80734,
+          "unique": "775",
+          "top": "2024-08-02",
+          "freq": 144,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "QUANTITY": {
+          "count": 91685.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 5.508251077057316,
+          "min": 1.0,
+          "25%": 3.0,
+          "50%": 6.0,
+          "75%": 8.0,
+          "max": 10.0,
+          "std": 2.873659442348036
+        },
+        "UNIT_PRICE": {
+          "count": 91685,
+          "unique": "40442",
+          "top": "75000.00",
+          "freq": 1178,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "SUBTOTAL": {
+          "count": 91685,
+          "unique": "66548",
+          "top": "600000.00",
+          "freq": 126,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "DISCOUNT_AMOUNT": {
+          "count": 31937,
+          "unique": "21649",
+          "top": "2000.00",
+          "freq": 81,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "TAX_RATE": {
+          "count": 86823,
+          "unique": "1001",
+          "top": "0.1244",
+          "freq": 121,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "TAX_AMOUNT": {
+          "count": 86823,
+          "unique": "32362",
+          "top": "49.82",
+          "freq": 17,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "TOTAL_AMOUNT": {
+          "count": 91685,
+          "unique": "73588",
+          "top": "800000.00",
+          "freq": 940,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "INVOICE_STATUS": {
+          "count": 91685,
+          "unique": "6",
+          "top": "Overdue",
+          "freq": 15385,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "PAYMENT_METHOD": {
+          "count": 84463,
+          "unique": "6",
+          "top": "Bank Transfer",
+          "freq": 14300,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "CUSTOMER_COMPANY": {
+          "count": 73460,
+          "unique": "48239",
+          "top": "Smith Group",
+          "freq": 95,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "BILLING_ADDRESS": {
+          "count": 77990,
+          "unique": "71780",
+          "top": "81274 Jones Mountain, Allenfurt, FL 30221",
+          "freq": 2,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "SHIPPING_ADDRESS": {
+          "count": 75211,
+          "unique": "69214",
+          "top": "61823 Sandra Radial Apt. 027, Smithberg, OH 89008",
+          "freq": 2,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "NOTES": {
+          "count": 22955,
+          "unique": "21171",
+          "top": "Either effect want film way carry cold. Record response should mission information require.\nBall human candidate former newspaper direction. Bill practice officer memory view.",
+          "freq": 2,
+          "mean": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null,
+          "std": null
+        },
+        "CREATED_AT": {
+          "count": 91685,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": "2025-05-20 14:58:53.518340096",
+          "min": "2023-11-25 17:03:44",
+          "25%": "2025-02-12 18:17:55",
+          "50%": "2025-07-05 09:15:11",
+          "75%": "2025-10-01 11:28:37",
+          "max": "2025-11-20 11:19:04",
+          "std": null
+        },
+        "UPDATED_AT": {
+          "count": 91685,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": "2025-05-20 17:12:59.415902464",
+          "min": "2023-11-20 13:59:38",
+          "25%": "2025-02-12 14:21:52",
+          "50%": "2025-07-05 09:20:35",
+          "75%": "2025-09-30 21:35:16",
+          "max": "2025-11-20 11:14:50",
+          "std": null
+        }
+      },
+      "status": "success"
+    }
+  },
+  "summary": {
+    "passed_checks": 2,
+    "failed_checks": 1,
+    "error_checks": 0
+  },
+  "recommendations": [
+    {
+      "title": "Address High Null Value Columns",
+      "description": "Columns `NOTES`, `DISCOUNT_AMOUNT` have >20% null values. Consider: 1) Data source validation, 2) Default value strategies, 3) Imputation techniques, or 4) Column removal if not critical.",
+      "priority": "High"
+    },
+    {
+      "title": "Implement Null Handling Strategy",
+      "description": "Columns `CUSTOMER_COMPANY`, `SHIPPING_ADDRESS`, `BILLING_ADDRESS` have 5-20% null values. Consider implementing NOT NULL constraints, data validation rules, or imputation strategies based on business logic.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Comprehensive Data Governance",
+      "description": "9 columns have null values. Implement data governance policies including mandatory field validation, data entry training, and upstream data quality monitoring.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Enhance Data Quality Processes",
+      "description": "67% pass rate indicates room for improvement. Implement automated quality gates, exception handling, and proactive monitoring for sustained quality.",
+      "priority": "Medium"
+    },
+    {
+      "title": "High Cardinality in INVOICE_ID",
+      "description": "Column `INVOICE_ID` has very high cardinality (91,685 unique values). Consider data normalization, categorization, or indexing strategies for performance.",
+      "priority": "Low"
+    },
+    {
+      "title": "Data Documentation and Profiling",
+      "description": "Dataset has 20 columns. Consider creating data dictionaries, establishing column-level monitoring, and implementing regular statistical profiling to track data drift over time.",
+      "priority": "Low"
+    }
+  ]
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Quality Assessment Report</title>
+    
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+            .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+            .summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #007bff; }
+            .passed { border-left-color: #28a745; }
+            .failed { border-left-color: #dc3545; }
+            .error { border-left-color: #ffc107; }
+            .check-result { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .check-title { font-size: 1.2em; font-weight: bold; margin-bottom: 10px; }
+            .status-pass { color: #28a745; }
+            .status-fail { color: #dc3545; }
+            .status-error { color: #ffc107; }
+            .recommendations { background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .recommendation-item { margin: 15px 0; padding: 15px; background: white; border-radius: 5px; }
+            .priority-high { border-left: 4px solid #dc3545; }
+            .priority-medium { border-left: 4px solid #ffc107; }
+            .priority-low { border-left: 4px solid #28a745; }
+            .metadata-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .metadata-table th, .metadata-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+            .metadata-table th { background: #f8f9fa; }
+            code { background: #f8f9fa; padding: 2px 4px; border-radius: 3px; font-family: 'Courier New', monospace; }
+        </style>
+        
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Data Quality Assessment Report</h1>
+        <p>Comprehensive analysis of dataset: <code style="color: black; background: white; font-weight: bold;">PROD_SALES.DATA_MART_MARKETING.CUSTOMERS</code></p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card passed">
+            <h3>✅ Passed</h3>
+            <div style="font-size: 2em; font-weight: bold;">2</div>
+            <p>Checks passed</p>
+        </div>
+        <div class="summary-card failed">
+            <h3>❌ Failed</h3>
+            <div style="font-size: 2em; font-weight: bold;">1</div>
+            <p>Checks failed</p>
+        </div>
+        <div class="summary-card error">
+            <h3>🚫 Errors</h3>
+            <div style="font-size: 2em; font-weight: bold;">0</div>
+            <p>Checks errored</p>
+        </div>
+    </div>
+
+    <h2>📋 Dataset Information</h2>
+    <table class="metadata-table">
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Dataset</td><td><code>PROD_SALES.DATA_MART_MARKETING.CUSTOMERS</code></td></tr>
+        <tr><td>Connector</td><td>SNOWFLAKE</td></tr>
+        <tr><td>Assessment Date</td><td>2025-11-28 08:29:41</td></tr>
+        <tr><td>Total Checks</td><td>3</td></tr>
+    </table>
+
+    <h2>Detailed Check Results</h2>
+
+    <div class="check-result">
+        <div class="check-title status-pass">
+            ✅ Duplicates
+        </div>
+
+        <p><strong>Status:</strong> <span class="status-pass">PASS</span></p>
+        <p><strong>Total Rows:</strong> 37,811</p>
+        <p><strong>Duplicate Records:</strong> 0 (0.00% of data)</p>
+<p><strong>Quality:</strong> <span style='color: green;'>Excellent - No duplicate records found</span></p>    </div>
+
+    <div class="check-result">
+        <div class="check-title status-fail">
+            ❌ Null Values
+        </div>
+
+        <p><strong>Status:</strong> <span class="status-fail">FAIL</span></p>
+        <p><strong>Dataset Size:</strong> 37,811 rows × 22 columns</p>
+        <p><strong>Columns with Missing Data:</strong> 3 out of 22 columns</p>
+<p><strong>Missing Data Coverage:</strong> 13.6% of columns affected</p><p><strong>Detailed Null Analysis:</strong></p><ul><li><code>COMPANY</code>: 6,927 nulls (18.3%)</li><li><code>PHONE</code>: 5,794 nulls (15.3%)</li><li><code>ADDRESS</code>: 3,130 nulls (8.3%)</li></ul>    </div>
+
+    <div class="check-result">
+        <div class="check-title status-pass">
+            ✅ Descriptive Stats
+        </div>
+
+        <p><strong>Status:</strong> <span class="status-pass">PASS (Statistics Generated)</span></p>
+        <p><strong>Columns Analyzed:</strong> 22 columns</p>
+
+        <p><strong>📊 Complete Statistical Summary:</strong></p>
+        <div style='overflow-x: auto; margin: 10px 0;'>
+        <table style='width: 100%; border-collapse: collapse; font-size: 0.9em;'>
+        <tr style='background: #667eea; color: white; font-weight: bold;'>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Column</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Count</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Mean</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Std</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Min</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>25%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>50%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>75%</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Max</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Unique</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Top</th>
+            <th style='border: 1px solid #ddd; padding: 8px;'>Freq</th>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>CUSTOMER_ID</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>36,483.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>718.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>3.00</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>FIRST_NAME</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>690</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Michael</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>846</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>LAST_NAME</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>1000</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Smith</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>863</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>EMAIL</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>34131</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>pbrown@example.</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>8</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>PHONE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>32,017</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>31315</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>+1-493-339-0626</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>3</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>ADDRESS</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>34,681</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>33731</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>68814 Cooper La</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>3</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>CITY</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>20395</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>West Michael</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>39</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>STATE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>50</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Alaska</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>801</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>ZIP_CODE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>50,206.64</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>28,724.82</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>504.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>25,341.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>50,261.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>75,131.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>99,945.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>COUNTRY</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>243</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Korea</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>345</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>DATE_OF_BIRTH</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>19125</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>1964-12-02</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>10</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>AGE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>51.45</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>19.64</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>18.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>34.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>51.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>68.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>85.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>GENDER</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>3</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Other</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>12,639</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>COMPANY</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>30,884</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>23649</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Smith and Sons</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>45</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>JOB_TITLE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>639</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Commercial art </td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>93</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>INCOME</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>114,325.32</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>45,228.85</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>4,171.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>80,369.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>114,162.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>146,245.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>255,659.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>ACCOUNT_BALANCE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>36362</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>48185.59</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>3</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>CREDIT_SCORE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>575.36</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>159.33</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>300.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>437.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>575.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>714.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>850.00</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>REGISTRATION_DATE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>1827</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>2024-08-23</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>42</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>LAST_LOGIN</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>90</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>2025-10-09</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>470</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>IS_ACTIVE</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>2</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>False</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>18,926</td>
+        </tr>
+        <tr>
+            <td style='border: 1px solid #ddd; padding: 6px; font-weight: bold;'><code>CUSTOMER_SEGMENT</code></td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>37,811</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>-</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>4</td>
+            <td style='border: 1px solid #ddd; padding: 6px;'>Standard</td>
+            <td style='border: 1px solid #ddd; padding: 6px; text-align: right;'>9,531</td>
+        </tr>
+        </table>
+        </div>    </div>
+
+    <div class="recommendations">
+        <h2>Recommendations</h2>
+
+        <div class="recommendation-item priority-medium">
+            <h4>1. Implement Null Handling Strategy</h4>
+            <p>Columns `COMPANY`, `PHONE`, `ADDRESS` have 5-20% null values. Consider implementing NOT NULL constraints, data validation rules, or imputation strategies based on business logic.</p>
+            <p><em>Priority: Medium</em></p>
+        </div>
+
+        <div class="recommendation-item priority-medium">
+            <h4>2. Enhance Data Quality Processes</h4>
+            <p>67% pass rate indicates room for improvement. Implement automated quality gates, exception handling, and proactive monitoring for sustained quality.</p>
+            <p><em>Priority: Medium</em></p>
+        </div>
+
+        <div class="recommendation-item priority-low">
+            <h4>3. High Cardinality in CUSTOMER_ID</h4>
+            <p>Column `CUSTOMER_ID` has very high cardinality (36,483 unique values). Consider data normalization, categorization, or indexing strategies for performance.</p>
+            <p><em>Priority: Low</em></p>
+        </div>
+
+        <div class="recommendation-item priority-low">
+            <h4>4. High Cardinality in PHONE</h4>
+            <p>Column `PHONE` has very high cardinality (31,315 unique values). Consider data normalization, categorization, or indexing strategies for performance.</p>
+            <p><em>Priority: Low</em></p>
+        </div>
+
+        <div class="recommendation-item priority-low">
+            <h4>5. High Cardinality in ADDRESS</h4>
+            <p>Column `ADDRESS` has very high cardinality (33,731 unique values). Consider data normalization, categorization, or indexing strategies for performance.</p>
+            <p><em>Priority: Low</em></p>
+        </div>
+
+        <div class="recommendation-item priority-low">
+            <h4>6. High Cardinality in ACCOUNT_BALANCE</h4>
+            <p>Column `ACCOUNT_BALANCE` has very high cardinality (36,362 unique values). Consider data normalization, categorization, or indexing strategies for performance.</p>
+            <p><em>Priority: Low</em></p>
+        </div>
+
+        <div class="recommendation-item priority-low">
+            <h4>7. Data Documentation and Profiling</h4>
+            <p>Dataset has 22 columns. Consider creating data dictionaries, establishing column-level monitoring, and implementing regular statistical profiling to track data drift over time.</p>
+            <p><em>Priority: Low</em></p>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+        <p><strong>Report Generated by:</strong> LLM Data Quality Agent</p>
+        <p><strong>Generation Time:</strong> 2025-11-28 08:29:41</p>
+        <p><em>This report was automatically generated. Please review recommendations and take appropriate action.</em></p>
+    </div>
+</body>
+</html>
