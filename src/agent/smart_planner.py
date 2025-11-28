@@ -251,7 +251,7 @@ def run_smart_dq_check(query: str, top_k_tables: int = 3):
     all_matches = schema_indexer.search_tables(query, top_k=10, min_relevance=0.0)
 
     # Apply relevance threshold filtering
-    MIN_RELEVANCE_THRESHOLD = 0.05  # 5% minimum threshold for broader matching
+    MIN_RELEVANCE_THRESHOLD = 0.20  # 20% minimum threshold for stricter matching
     relevant_tables = schema_indexer.search_tables(query, top_k=top_k_tables, min_relevance=MIN_RELEVANCE_THRESHOLD)
 
     if not relevant_tables:

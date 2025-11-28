@@ -134,8 +134,8 @@ class RemediationAdvisor:
             std_val = column_stats.get('std')
 
             if mean_val is not None and std_val is not None and mean_val != 0:
-                cv = std_val / abs(mean_val)  # Coefficient of variation
-                if cv > 2:  # High variability
+                cv = (std_val / abs(mean_val)) * 100  # Coefficient of variation as percentage
+                if cv > 35:  # High variability (>35%)
                     recommendations.append({
                         'title': f'Investigate High Variability in {column_name}',
                         'description': f'Column `{column_name}` has high variability (CV={cv:.2f}). Review for outliers, data entry errors, or consider data transformation/normalization techniques.',
