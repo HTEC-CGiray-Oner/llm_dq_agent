@@ -148,9 +148,10 @@ Folder where data quality reports are saved:
 
 ## How to Ask Questions
 
-For best results, these details can be included in questions:
+For best results, below details can be included in questions:
 Even though those are not added in queries relevance score by semantic similarity will be taken into so below items are not mandatory.
-Relevance score calculation based on table description, column details, sample data, row counts will get better score.
+Relevance score calculation based on table description, column details, sample data, row counts will get better score. Besides agent picks more context related options even relevance are lower.
+However for relevance there is a threshold of %20 in order to avoid unrelated table based operations.
 For this POC, staging database defined as postgre on local while snowflake defined as prod database and data flaws are less in prod.
 
 ### Database Environment
