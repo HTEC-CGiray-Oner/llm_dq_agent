@@ -203,3 +203,23 @@ Optional ! The database system being used can be mentioned (not mandatory, can h
 - **Jupyter Notebooks** - For interactive testing and examples
 
 This project makes data quality checking easy by allowing questions to be asked in normal English instead of writing complex database queries.
+
+## Key Features
+
+### Efficient Data Access - Comprehensive Analysis by Default
+**Feature**: The agent is designed to perform comprehensive data quality analysis even when single checks are requested (e.g., "check for duplicates only").
+
+**Design Rationale**: Since the system reads data from source databases, it's more efficient to perform all available data quality checks in a single data retrieval operation rather than making multiple separate database calls.
+
+**Benefits**: 
+- **Reduced Database Load**: Single data read instead of multiple separate queries
+- **Better Performance**: All checks completed in one execution cycle
+- **Complete Insights**: Users get comprehensive data quality overview even when asking for specific checks
+- **Cost Efficiency**: Minimized database connection overhead and data transfer
+
+**Usage**: 
+- Request any data quality check and receive comprehensive analysis automatically
+- For single-check scenarios, refer to the notebooks which demonstrate how to extract specific results from comprehensive reports
+- Use explicit comprehensive language (e.g., "run comprehensive data quality assessment") for clarity
+
+**Technical Implementation**: The agent prompt in `src/agent/smart_planner.py` prioritizes `run_comprehensive_dq_assessment` as "RECOMMENDED - most efficient" to ensure optimal resource utilization while maintaining the flexibility to perform targeted checks when specifically needed through direct function calls in notebooks.
