@@ -1,0 +1,506 @@
+{
+  "metadata": {
+    "dataset_id": "PROD_SALES.DATA_MART_MARKETING.CALL_CENTER",
+    "connector_type": "snowflake",
+    "timestamp": "2025-11-29T17:11:26.121797",
+    "checks_requested": [
+      "duplicates",
+      "null_values",
+      "descriptive_stats"
+    ],
+    "total_checks": 3
+  },
+  "check_results": {
+    "duplicates": {
+      "dataset_id": "PROD_SALES.DATA_MART_MARKETING.CALL_CENTER",
+      "total_rows": 60,
+      "duplicate_qty": 0,
+      "status": "success"
+    },
+    "null_values": {
+      "dataset_id": "PROD_SALES.DATA_MART_MARKETING.CALL_CENTER",
+      "total_rows": 60,
+      "total_columns": 31,
+      "columns_with_nulls": 2,
+      "null_analysis": [
+        {
+          "column_name": "CC_CLOSED_DATE_SK",
+          "null_count": "60",
+          "null_percentage": 100.0
+        },
+        {
+          "column_name": "CC_REC_END_DATE",
+          "null_count": "30",
+          "null_percentage": 50.0
+        }
+      ],
+      "status": "success"
+    },
+    "descriptive_stats": {
+      "dataset_id": "PROD_SALES.DATA_MART_MARKETING.CALL_CENTER",
+      "descriptive_stats": {
+        "CC_CALL_CENTER_SK": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 30.5,
+          "std": 17.46424919657298,
+          "min": 1.0,
+          "25%": 15.75,
+          "50%": 30.5,
+          "75%": 45.25,
+          "max": 60.0
+        },
+        "CC_CALL_CENTER_ID": {
+          "count": 60,
+          "unique": "30",
+          "top": "AAAAAAAAABAAAAAA",
+          "freq": 3,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_REC_START_DATE": {
+          "count": 60,
+          "unique": "4",
+          "top": "1998-01-01",
+          "freq": 30,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_REC_END_DATE": {
+          "count": 30,
+          "unique": "3",
+          "top": "2000-12-31",
+          "freq": 10,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_CLOSED_DATE_SK": {
+          "count": 0,
+          "unique": "0",
+          "top": null,
+          "freq": null,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_OPEN_DATE_SK": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 2451003.9166666665,
+          "std": 109.55182840712715,
+          "min": 2450794.0,
+          "25%": 2450938.0,
+          "50%": 2451059.0,
+          "75%": 2451082.5,
+          "max": 2451146.0
+        },
+        "CC_NAME": {
+          "count": 60,
+          "unique": "30",
+          "top": "Hawaii/Alaska_4",
+          "freq": 3,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_CLASS": {
+          "count": 60,
+          "unique": "3",
+          "top": "medium",
+          "freq": 26,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_EMPLOYEES": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 601547103.2333333,
+          "std": 336928994.63636893,
+          "min": 5412266.0,
+          "25%": 371533763.75,
+          "50%": 628355057.0,
+          "75%": 886144828.5,
+          "max": 1275612983.0
+        },
+        "CC_SQ_FT": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 156394745.05,
+          "std": 1300064061.896244,
+          "min": -2108783316.0,
+          "25%": -684143870.5,
+          "50%": 475079344.0,
+          "75%": 1081694084.5,
+          "max": 2108552432.0
+        },
+        "CC_HOURS": {
+          "count": 60,
+          "unique": "3",
+          "top": "8AM-4PM",
+          "freq": 48,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_MANAGER": {
+          "count": 60,
+          "unique": "42",
+          "top": "Kendall Jones",
+          "freq": 3,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_MKT_ID": {
+          "count": 60.0,
+          "unique": 6.0,
+          "top": 6.0,
+          "freq": 16.0,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_MKT_CLASS": {
+          "count": 60,
+          "unique": "52",
+          "top": "Citizens change. Paintings translate",
+          "freq": 2,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_MKT_DESC": {
+          "count": 60,
+          "unique": "48",
+          "top": "New, surprised clothes wish high parts. Particles assess simple, ready newspapers; sil",
+          "freq": 3,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_MARKET_MANAGER": {
+          "count": 60,
+          "unique": "48",
+          "top": "Todd Smith",
+          "freq": 3,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_DIVISION": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 3.4166666666666665,
+          "std": 1.6803113781926302,
+          "min": 1.0,
+          "25%": 2.0,
+          "50%": 3.5,
+          "75%": 5.0,
+          "max": 6.0
+        },
+        "CC_DIVISION_NAME": {
+          "count": 60,
+          "unique": "6",
+          "top": "able",
+          "freq": 19,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_COMPANY": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 3.683333333333333,
+          "std": 1.6207517262653433,
+          "min": 1.0,
+          "25%": 2.75,
+          "50%": 4.0,
+          "75%": 5.0,
+          "max": 6.0
+        },
+        "CC_COMPANY_NAME": {
+          "count": 60,
+          "unique": "6",
+          "top": "anti",
+          "freq": 15,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_STREET_NUMBER": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 568.6,
+          "std": 286.2945147091407,
+          "min": 38.0,
+          "25%": 406.0,
+          "50%": 611.0,
+          "75%": 772.25,
+          "max": 999.0
+        },
+        "CC_STREET_NAME": {
+          "count": 60,
+          "unique": "29",
+          "top": "Main",
+          "freq": 4,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_STREET_TYPE": {
+          "count": 60,
+          "unique": "14",
+          "top": "Ct.",
+          "freq": 12,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_SUITE_NUMBER": {
+          "count": 60,
+          "unique": "26",
+          "top": "Suite B",
+          "freq": 6,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_CITY": {
+          "count": 60,
+          "unique": "25",
+          "top": "Buena Vista",
+          "freq": 6,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_COUNTY": {
+          "count": 60,
+          "unique": "25",
+          "top": "Gage County",
+          "freq": 5,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_STATE": {
+          "count": 60,
+          "unique": "19",
+          "top": "TN",
+          "freq": 13,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_ZIP": {
+          "count": 60.0,
+          "unique": null,
+          "top": null,
+          "freq": null,
+          "mean": 49001.05,
+          "std": 22021.330272341842,
+          "min": 9903.0,
+          "25%": 33451.0,
+          "50%": 45906.0,
+          "75%": 66614.0,
+          "max": 96192.0
+        },
+        "CC_COUNTRY": {
+          "count": 60,
+          "unique": "1",
+          "top": "United States",
+          "freq": 60,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_GMT_OFFSET": {
+          "count": 60,
+          "unique": "4",
+          "top": "-5.00",
+          "freq": 29,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        },
+        "CC_TAX_PERCENTAGE": {
+          "count": 60,
+          "unique": "13",
+          "top": "0.11",
+          "freq": 10,
+          "mean": null,
+          "std": null,
+          "min": null,
+          "25%": null,
+          "50%": null,
+          "75%": null,
+          "max": null
+        }
+      },
+      "status": "success"
+    }
+  },
+  "summary": {
+    "passed_checks": 2,
+    "failed_checks": 1,
+    "error_checks": 0
+  },
+  "recommendations": [
+    {
+      "title": "Address High Null Value Columns",
+      "description": "Columns `CC_CLOSED_DATE_SK`, `CC_REC_END_DATE` have >20% null values. Consider: 1) Data source validation, 2) Default value strategies, 3) Imputation techniques, or 4) Column removal if not critical.",
+      "priority": "High"
+    },
+    {
+      "title": "Enhance Data Quality Processes",
+      "description": "67% pass rate indicates room for improvement. Implement automated quality gates, exception handling, and proactive monitoring for sustained quality.",
+      "priority": "Medium"
+    },
+    {
+      "title": "Investigate High Variability in CC_CALL_CENTER_SK",
+      "description": "Column `CC_CALL_CENTER_SK` has high variability (CV=57.26). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_EMPLOYEES",
+      "description": "Column `CC_EMPLOYEES` has high variability (CV=56.01). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_SQ_FT",
+      "description": "Column `CC_SQ_FT` has high variability (CV=831.27). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_DIVISION",
+      "description": "Column `CC_DIVISION` has high variability (CV=49.18). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_COMPANY",
+      "description": "Column `CC_COMPANY` has high variability (CV=44.00). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_STREET_NUMBER",
+      "description": "Column `CC_STREET_NUMBER` has high variability (CV=50.35). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Investigate High Variability in CC_ZIP",
+      "description": "Column `CC_ZIP` has high variability (CV=44.94). Review for outliers, data entry errors, or consider data transformation/normalization techniques.",
+      "priority": "Low"
+    },
+    {
+      "title": "Data Documentation and Profiling",
+      "description": "Dataset has 31 columns. Consider creating data dictionaries, establishing column-level monitoring, and implementing regular statistical profiling to track data drift over time.",
+      "priority": "Low"
+    }
+  ]
+}
