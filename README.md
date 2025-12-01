@@ -202,24 +202,126 @@ Optional ! The database system being used can be mentioned (not mandatory, can h
 - **Snowflake & PostgreSQL** - Supported database types
 - **Jupyter Notebooks** - For interactive testing and examples
 
-This project makes data quality checking easy by allowing questions to be asked in normal English instead of writing complex database queries.
-
 ## Key Features
 
 ### Efficient Data Access - Comprehensive Analysis by Default
-**Feature**: The agent is designed to perform comprehensive data quality analysis even when single checks are requested (e.g., "check for duplicates only").
+**Feature**: The agent performs comprehensive data quality analysis and provides flexible result extraction for downstream applications.
 
-**Design Rationale**: Since the system reads data from source databases, it's more efficient to perform all available data quality checks in a single data retrieval operation rather than making multiple separate database calls.
+**Current Implementation**: Each data quality check function reads data separately from the database. While this ensures modularity, it results in multiple database reads for comprehensive analysis.
 
-**Benefits**: 
-- **Reduced Database Load**: Single data read instead of multiple separate queries
-- **Better Performance**: All checks completed in one execution cycle
-- **Complete Insights**: Users get comprehensive data quality overview even when asking for specific checks
-- **Cost Efficiency**: Minimized database connection overhead and data transfer
+**Agent Strategy**: The system is designed to run comprehensive assessments by default, as performing all checks provides maximum value. Individual check results can be extracted from comprehensive reports as needed.
 
-**Usage**: 
+**Benefits**:
+- **Complete Data Quality Picture**: All checks executed to provide full insights
+- **Flexible Result Usage**: Comprehensive reports can be parsed for specific metrics
+- **Notebook Integration**: `tryouts.ipynb` demonstrates how to extract single check results from comprehensive analysis
+- **Downstream Compatibility**: JSON reports support automated parsing for specific data quality metrics
+
+**Usage**:
 - Request any data quality check and receive comprehensive analysis automatically
-- For single-check scenarios, refer to the notebooks which demonstrate how to extract specific results from comprehensive reports
+- For single-check scenarios, refer to the notebooks (`tryouts.ipynb`) which demonstrate how to extract specific results from comprehensive reports
+- Downstream systems can parse JSON outputs to extract only required metrics (duplicates, nulls, statistics)
 - Use explicit comprehensive language (e.g., "run comprehensive data quality assessment") for clarity
 
-**Technical Implementation**: The agent prompt in `src/agent/smart_planner.py` prioritizes `run_comprehensive_dq_assessment` as "RECOMMENDED - most efficient" to ensure optimal resource utilization while maintaining the flexibility to perform targeted checks when specifically needed through direct function calls in notebooks.
+**Technical Implementation**: The agent prompt in `src/agent/smart_planner.py` prioritizes `run_comprehensive_dq_assessment` as "RECOMMENDED - most efficient" to ensure maximum data quality insights while maintaining the flexibility to extract targeted results through report parsing in notebooks and downstream applications.
+
+## Adding New Data Sources
+
+This project is designed to be extensible. To add support for new database types (e.g., MySQL, Oracle, BigQuery), follow these steps:
+
+### Step 1: Create Database Connector
+**Location**: `src/connectors/`
+
+1. **Create new connector file**: `src/connectors/{database_type}_connector.py`
+2. **Inherit from BaseConnector**: Import and extend the `BaseConnector` class
+3. **Implement required methods**:
+   - `connect()` - Establish database connection
+   - `disconnect()` - Close database connection
+   - `load_data(dataset_id, query, limit)` - Execute queries and return DataFrames
+   - `test_connection()` - Verify connectivity
+
+**Example structure**:
+```python
+from .base_connector import BaseConnector
+import pandas as pd
+
+class MySQLConnector(BaseConnector):
+    def connect(self):
+        # Database-specific connection logic
+    def load_data(self, dataset_id, query=None, limit=None):
+        # Return pandas DataFrame
+```
+
+### Step 2: Update Connector Factory
+**Location**: `src/connectors/connector_factory.py`
+
+1. **Import your connector**: Add import statement for new connector class
+2. **Add to factory method**: Update `create_connector()` method with new database type
+3. **Add environment mappings**: Update `_load_config()` method with environment variable mappings
+
+**Example additions**:
+```python
+from .mysql_connector import MySQLConnector
+
+# In create_connector method:
+elif connector_type == 'mysql':
+    return MySQLConnector(config, verbose)
+
+# In _load_config env_mapping:
+'mysql': {
+    'host': 'MYSQL_HOST',
+    'user': 'MYSQL_USER',
+    'password': 'MYSQL_PASSWORD',
+    'database': 'MYSQL_DATABASE'
+}
+```
+
+### Step 3: Extend Schema Discovery
+**Location**: `src/connectors/schema_discovery.py`
+
+Add database-specific discovery methods (note: schema discovery runs automatically when `auto_discover_schemas: true` is set in `config/settings.yaml`. If users hardcode specific schemas in settings, auto-discovery will be skipped and these methods do not need to be updated):
+
+1. **Add table discovery method**: Create `discover_{database_type}_tables()` method
+2. **Add column discovery method**: Create `_get_{database_type}_columns()` method
+3. **Update main methods**: Add your database type to `discover_tables()` and `get_table_columns()` methods
+4. **Handle sampling**: Update `get_table_sample()` method for your database's SQL syntax
+
+### Step 4: Update Configuration
+**Location**: `config/settings.yaml`
+
+Add connector configuration section for your database type:
+```yaml
+connectors:
+  mysql:
+    discovery:
+      database: my_mysql_db
+      schema: null
+      auto_discover_schemas: true
+      exclude_schemas: [information_schema, mysql, performance_schema]
+      include_sample: true
+      sample_row_limit: 3
+```
+
+### Step 5: Update Smart Detection
+**Location**: `src/data_quality/checks.py`
+
+Update `smart_connector_detection()` function to recognize your database patterns:
+```python
+# Add detection patterns for your database type
+if 'mysql' in dataset_id.lower() and 'mysql' in available_connectors:
+    return 'mysql'
+```
+
+### Step 6: Add Environment Variables
+**Location**: `.env` file
+
+Add connection credentials following the naming convention:
+```bash
+# MySQL Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=your_username
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=your_database
+```
+
+This modular approach ensures clean integration while maintaining existing functionality.
