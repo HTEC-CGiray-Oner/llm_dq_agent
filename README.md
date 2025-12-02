@@ -98,8 +98,7 @@ Detailed explanations of how everything works:
 - **`report_creation_process.md`** - Explains how reports are made step by step
 - **`schema_indexing_process.md`** - Explains how the data quality tool builds a searchable table database
 - **`smart_dq_check_process.md`** - Explains how the AI agent understands questions and picks the right actions
-- **`smart_dq_check_workflow.md`** - Additional workflow documentation
-- **`indexing_flow_diagram.md`** - Visual flow diagrams for the indexing process
+- **`code_reference_guide.md`** - Technical reference guide for developers
 
 ### `/notebooks` - Testing and Examples
 Jupyter notebook files for testing and experimentation:
@@ -118,10 +117,10 @@ Sample data files for testing and demonstration:
 - **`fake_data_generator.py`** - Script to generate synthetic test data
 
 **For Reviewers**: Database structure reference files are provided to help set up identical test environments:
-- **`postgres_table_structure.pgn`** - PostgreSQL table structures and schemas used in the project
-- **`snowflake_table_structure.pgn`** - Snowflake table structures and schemas used in the project
+- **`postgres_table_structure.png`** - PostgreSQL table structures and schemas used in the project
+- **`snowflake_table_structure.png`** - Snowflake table structures and schemas used in the project
 
-*Note: Set up your source databases with the same table structures shown in these .pgn files to use the example queries in `tryouts.ipynb` notebook.*
+*Note: Set up your source databases with the same table structures shown in these .png files to use the example queries in `tryouts.ipynb` notebook.*
 
 ### `/chroma_db` - Search Database
 Database files that help the system find tables:
