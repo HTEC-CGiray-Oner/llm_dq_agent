@@ -110,10 +110,18 @@ Jupyter notebook files for testing and experimentation:
 Sample data files for testing and demonstration:
 
 - **`fake_customers_*.csv`** - Sample customer data files for testing
+- **`call_center_prod.csv`** - Sample snowflake data files for testing
+- **`income_band_prod.csv`** - Sample snowflake data files for testing
 - **`fake_invoices_*.csv`** - Sample invoice data files for testing
 - **`fake_products_*.csv`** - Sample product data files for testing
 - **`fake_sales_*.csv`** - Sample sales data files for testing
 - **`fake_data_generator.py`** - Script to generate synthetic test data
+
+**For Reviewers**: Database structure reference files are provided to help set up identical test environments:
+- **`postgres_table_structure.pgn`** - PostgreSQL table structures and schemas used in the project
+- **`snowflake_table_structure.pgn`** - Snowflake table structures and schemas used in the project
+
+*Note: Set up your source databases with the same table structures shown in these .pgn files to use the example queries in `tryouts.ipynb` notebook.*
 
 ### `/chroma_db` - Search Database
 Database files that help the system find tables:
