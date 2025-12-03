@@ -30,6 +30,7 @@ pyyaml = "^6.0.1"
 snowflake-connector-python = {version = "^3.7.0", optional = true}
 psycopg2-binary = {version = "^2.9.9", optional = true}
 faker = "^38.0.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
@@ -38,7 +39,6 @@ black = "^23.12.1"
 isort = "^5.10.1"
 flake8 = "^7.0.0"
 mypy = "^1.8.0"
-python-dotenv = "^1.0.1"
 
 [tool.poetry.extras]
 snowflake = ["snowflake-connector-python"]
