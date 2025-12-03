@@ -401,7 +401,7 @@ class SchemaIndexer:
 
         # Perform similarity search with expanded results
         query_embedding = self.embeddings.embed_query(query)
-        search_limit = max(top_k * 2, 6)  # Get more results for filtering/boosting
+        search_limit = max(top_k * 2, 10)  # Get more results for filtering/boosting
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=search_limit,
